@@ -1,5 +1,11 @@
 #include <iostream>
+#include <cstdlib>
 
+struct UserParams{
+    char *userInput;
+    char *allInputs;
+    size_t bufferInput;
+};
 void ProgramHelper(){
     printf("Hello! This is a Simple Text Editor. You can use these commands: \n"
            "0 - Help \n"
@@ -21,16 +27,55 @@ void CommandParser(int *command) {
     }
     while (getchar() != '\n');
 }
-void CommandRunner(int command) {
+void AppendText(UserParams *up) {
+    up->userInput = (char*)malloc(up->bufferInput * sizeof(char));
+    printf("Enter a string that you want append: ");
+    getline(&up->userInput, &up->bufferInput, stdin);
+    up->userInput[strcspn(up->userInput, "\n")] = '\0';
+    if (up->allInputs == NULL)
+    {
+        up->allInputs = (char*)malloc((strlen(up->userInput) + 1) * sizeof(char));
+        strcpy(up->allInputs, up->userInput);
+    }
+    else
+    {
+        up->allInputs = (char*)realloc(up->allInputs, (strlen(up->userInput) + strlen(up->allInputs) + 1) * sizeof(char));
+        strcat(up->allInputs, up->userInput);
+    }
+    // printf("You entered: %s\n", up->allInputs);
+    printf("Text was appended.\n");
+    free(up->userInput);
+    up->userInput = NULL;
+}
+void NewLine(UserParams *up) {
+    up->allInputs = (char*)realloc(up->allInputs, (strlen(up->allInputs) + 2) * sizeof(char));
+    strcat(up->allInputs, "\n");
+    printf("New line was started.\n");
+}
+void PrintText(UserParams *up) {
+    if (up->allInputs == NULL) {
+        printf("There is no text!\n");
+    }
+    else {
+        printf(up->allInputs);
+        printf("\n");
+    }
+}
+void Clear(UserParams *up) {
+    free(up->allInputs);
+    up->allInputs = NULL;
+    printf("Console was cleared\n");
+}
+void CommandRunner(int command, UserParams *up) {
     switch (command) {
         case 0:
             ProgramHelper();
         return;
         case 1:
-            printf("Command is not implemented yet \n");
+            AppendText(up);
         break;
         case 2:
-            printf("Command is not implemented yet \n");
+            NewLine(up);
         break;
         case 3:
             printf("Command is not implemented yet \n");
@@ -39,7 +84,7 @@ void CommandRunner(int command) {
             printf("Command is not implemented yet \n");
         break;
         case 5:
-            printf("Command is not implemented yet \n");
+            PrintText(up);
         break;
         case 6:
             printf("Command is not implemented yet \n");
@@ -48,7 +93,7 @@ void CommandRunner(int command) {
             printf("Command is not implemented yet \n");
         break;
         case 8:
-            printf("Command is not implemented yet \n");
+            Clear(up);
         break;
         default:
             printf("Thanks for using this program. Bye!");
@@ -57,9 +102,10 @@ void CommandRunner(int command) {
 }
 int main() {
     int command;
+    UserParams up{NULL, NULL, 0};
     do {
         CommandParser(&command);
-        CommandRunner(command);
+        CommandRunner(command, &up);
     }
     while
     (
