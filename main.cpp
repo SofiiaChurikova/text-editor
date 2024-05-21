@@ -66,6 +66,24 @@ void Clear(UserParams *up) {
     up->allInputs = NULL;
     printf("Console was cleared\n");
 }
+void SaveFile(UserParams *up) {
+    FILE * file;
+    printf("Enter a title for file: \n");
+    up->userInput = (char*)malloc(up->bufferInput * sizeof(char));
+    scanf("%s", up->userInput);
+    file = fopen(up->userInput, "w");
+    if (file != NULL)
+    {
+        fputs(up->allInputs, file);
+        fclose(file);
+        printf("File created and text saved!\n");
+    }
+    else
+    {
+        printf("Error opening file\n");
+    }
+    free(up->userInput);
+}
 void CommandRunner(int command, UserParams *up) {
     switch (command) {
         case 0:
@@ -81,7 +99,7 @@ void CommandRunner(int command, UserParams *up) {
             printf("Command is not implemented yet \n");
         break;
         case 4:
-            printf("Command is not implemented yet \n");
+            SaveFile(up);
         break;
         case 5:
             PrintText(up);
@@ -102,7 +120,7 @@ void CommandRunner(int command, UserParams *up) {
 }
 int main() {
     int command;
-    UserParams up{NULL, NULL, 0};
+    UserParams up{NULL, NULL, 100};
     do {
         CommandParser(&command);
         CommandRunner(command, &up);
