@@ -6,6 +6,18 @@ struct UserParams{
     char *allInputs;
     size_t bufferInput;
 };
+enum Commands {
+    COMMAND_HELP = 0,
+    COMMAND_APPEND = 1,
+    START_NEW_LINE = 2,
+    LOAD_FROM_FILE = 3,
+    SAVE_TO_FILE = 4,
+    PRINT_TEXT = 5,
+    INSERT_BY_INDEX = 6,
+    SEARCH_TEXT = 7,
+    CLEAR_CONSOLE = 8,
+    EXIT = 9
+};
 void ProgramHelper(){
     printf("Hello! This is a Simple Text Editor. You can use these commands: \n"
            "0 - Help \n"
@@ -21,7 +33,7 @@ void ProgramHelper(){
 }
 void CommandParser(int *command) {
     printf("Which command do you want to use? (0 - Help): ");
-    while (scanf("%d", command) < 0 || *command > 9) {
+    while (scanf("%d", command) != 1 || *command < COMMAND_HELP || *command > EXIT) {
         printf("Invalid input! Please enter a valid command (0 - 9): ");
         while (getchar() != '\n');
     }
@@ -110,38 +122,40 @@ void LoadFromFile(UserParams *up) {
     free(up->userInput);
     up->userInput = NULL;
 }
-
 void CommandRunner(int command, UserParams *up) {
     switch (command) {
-        case 0:
+        case COMMAND_HELP:
             ProgramHelper();
         return;
-        case 1:
+        case COMMAND_APPEND:
             AppendText(up);
         break;
-        case 2:
+        case START_NEW_LINE:
             NewLine(up);
         break;
-        case 3:
+        case LOAD_FROM_FILE:
             LoadFromFile(up);
         break;
-        case 4:
+        case SAVE_TO_FILE:
             SaveFile(up);
         break;
-        case 5:
+        case PRINT_TEXT:
             PrintText(up);
         break;
-        case 6:
+        case INSERT_BY_INDEX:
             printf("Command is not implemented yet \n");
         break;
-        case 7:
+        case SEARCH_TEXT:
             printf("Command is not implemented yet \n");
         break;
-        case 8:
+        case CLEAR_CONSOLE:
             Clear(up);
         break;
-        default:
+        case EXIT:
             printf("Thanks for using this program. Bye!");
+        break;;
+        default:
+            printf("Unknown command\n");
         break;
     }
 }
@@ -154,7 +168,7 @@ int main() {
     }
     while
     (
-        command != 9
+        command != EXIT
     );
     return 0;
 }
