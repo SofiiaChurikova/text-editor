@@ -98,6 +98,26 @@ void SaveFile(UserParams *up) {
 }
 void LoadFromFile(UserParams *up) {
     FILE * file;
+    if (up->allInputs != NULL) {
+        char dataAnswer[20];
+        printf("Do you really want to load a new file? (Yes/No) You have unsaved text: ");
+        scanf("%s", dataAnswer);
+        for (int i = 0; dataAnswer[i]; i++) {
+            dataAnswer[i] = tolower(dataAnswer[i]);
+        }
+        if (strcmp(dataAnswer, "yes") == 0)
+        {
+            if (up->allInputs != NULL)
+            {
+                free(up->allInputs);
+                up->allInputs = NULL;
+            }
+         }
+        else
+        {
+            return;
+        }
+    }
     printf("Enter a file that you want to load info from: ");
     char fileInput[256];
     scanf("%s", fileInput);
