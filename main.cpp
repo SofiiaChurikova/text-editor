@@ -84,6 +84,33 @@ void SaveFile(UserParams *up) {
     }
     free(up->userInput);
 }
+void LoadFromFile(UserParams *up) {
+    FILE * file;
+    printf("Enter a file that you want to load info from: ");
+    char fileInput[256];
+    scanf("%s", fileInput);
+    file = fopen(fileInput, "r");
+    if (file == NULL) {
+        printf("Error opening file\n");
+        fclose(file);
+        return;
+    }
+    fseek(file, 0, SEEK_END);
+    long fileSize = ftell(file);
+    rewind(file);
+    up->userInput = (char*)realloc(up->userInput, (fileSize + 1) * sizeof(char));
+    if (fread(up->userInput, sizeof(char), fileSize, file) == fileSize) {
+        up->allInputs = (char*)realloc(up->allInputs, (fileSize + 1) * sizeof(char));
+        strcat(up->allInputs, up->userInput);
+        printf("File content loaded\n");
+    } else {
+        printf("Error reading file\n");
+    }
+    fclose(file);
+    free(up->userInput);
+    up->userInput = NULL;
+}
+
 void CommandRunner(int command, UserParams *up) {
     switch (command) {
         case 0:
@@ -96,7 +123,7 @@ void CommandRunner(int command, UserParams *up) {
             NewLine(up);
         break;
         case 3:
-            printf("Command is not implemented yet \n");
+            LoadFromFile(up);
         break;
         case 4:
             SaveFile(up);
