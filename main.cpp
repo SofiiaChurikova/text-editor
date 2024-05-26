@@ -230,13 +230,15 @@ void InsertByIndex(UserParams *up) {
     }
     printf("Enter what do you want to insert: ");
     up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
-    scanf("%s", up->userInput);
     if (up->allInputs == NULL) {
         printf("There is no text to insert. Use Append Command!\n");
         free(up->userInput);
         up->userInput = NULL;
         return;
     }
+    getchar();
+    getline(&up->userInput, &up->bufferInput, stdin);
+    up->userInput[strcspn(up->userInput, "\n")] = '\0';
     char *newBuffer = (char *) malloc(strlen(up->allInputs) + strlen(up->userInput) + 1);
     int currentLine = 1;
     int currentIndex = 1;
