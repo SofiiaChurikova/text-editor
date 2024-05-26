@@ -69,8 +69,7 @@ void PrintText(UserParams *up) {
         printf("There is no text!\n");
     }
     else {
-        printf(up->allInputs);
-        printf("\n");
+        printf("%s", up->allInputs);
     }
 }
 void Clear(UserParams *up) {
@@ -132,6 +131,7 @@ void LoadFromFile(UserParams *up) {
     rewind(file);
     up->userInput = (char*)realloc(up->userInput, (fileSize + 1) * sizeof(char));
     if (fread(up->userInput, sizeof(char), fileSize, file) == fileSize) {
+        up->userInput[fileSize] = '\0';
         up->allInputs = (char*)realloc(up->allInputs, (fileSize + 1) * sizeof(char));
         strcat(up->allInputs, up->userInput);
         printf("File content loaded\n");
@@ -139,6 +139,39 @@ void LoadFromFile(UserParams *up) {
         printf("Error reading file\n");
     }
     fclose(file);
+    free(up->userInput);
+    up->userInput = NULL;
+}
+void SearchText(UserParams *up) {
+    int line = 1;
+    int charIndex = 1;
+    if (up->allInputs == NULL) {
+        printf("There is no text to search!\n");
+        return;
+    }
+    printf("Enter text to search: ");
+    up->userInput = (char*)malloc(up->bufferInput * sizeof(char));
+    scanf("%s", up->userInput);
+    char *search = strstr(up->allInputs, up->userInput);
+    if (search == NULL) {
+        printf("Text was not found.\n");
+    }
+    else {
+        char *currentPosition = up->allInputs;
+        while (search != NULL) {
+            while (currentPosition != search) {
+                if (*currentPosition == '\n') {
+                    line++;
+                    charIndex = 1;
+                } else {
+                    charIndex++;
+                }
+                currentPosition++;
+            }
+            printf("Text is present in this position: line %d, index %d\n", line, charIndex);
+            search = strstr(currentPosition + 1, up->userInput);
+        }
+    }
     free(up->userInput);
     up->userInput = NULL;
 }
@@ -166,7 +199,7 @@ void CommandRunner(int command, UserParams *up) {
             printf("Command is not implemented yet \n");
         break;
         case SEARCH_TEXT:
-            printf("Command is not implemented yet \n");
+            SearchText(up);
         break;
         case CLEAR_CONSOLE:
             Clear(up);
