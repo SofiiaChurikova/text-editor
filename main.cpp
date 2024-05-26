@@ -1,11 +1,12 @@
 #include <iostream>
 #include <cstdlib>
 
-struct UserParams{
+struct UserParams {
     char *userInput;
     char *allInputs;
     size_t bufferInput;
 };
+
 enum Commands {
     COMMAND_HELP = 0,
     COMMAND_APPEND = 1,
@@ -18,19 +19,21 @@ enum Commands {
     CLEAR_CONSOLE = 8,
     EXIT = 9
 };
-void ProgramHelper(){
+
+void ProgramHelper() {
     printf("Hello! This is a Simple Text Editor. You can use these commands: \n"
-           "0 - Help \n"
-           "1 - Append text \n"
-           "2 - Start the new line \n"
-           "3 - Load the information from the file \n"
-           "4 - Save the information to the file \n"
-           "5 - Print the text \n"
-           "6 - Insert the text by line and symbol \n"
-           "7 - Search the text \n"
-           "8 - Clear the console \n"
-           "9 - Exit \n");
+        "0 - Help \n"
+        "1 - Append text \n"
+        "2 - Start the new line \n"
+        "3 - Load the information from the file \n"
+        "4 - Save the information to the file \n"
+        "5 - Print the text \n"
+        "6 - Insert the text by line and symbol \n"
+        "7 - Search the text \n"
+        "8 - Clear the console \n"
+        "9 - Exit \n");
 }
+
 void CommandParser(int *command) {
     printf("Which command do you want to use? (0 - Help): ");
     while (scanf("%d", command) != 1 || *command < COMMAND_HELP || *command > EXIT) {
@@ -39,19 +42,18 @@ void CommandParser(int *command) {
     }
     while (getchar() != '\n');
 }
+
 void AppendText(UserParams *up) {
-    up->userInput = (char*)malloc(up->bufferInput * sizeof(char));
+    up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
     printf("Enter a string that you want append: ");
     getline(&up->userInput, &up->bufferInput, stdin);
     up->userInput[strcspn(up->userInput, "\n")] = '\0';
-    if (up->allInputs == NULL)
-    {
-        up->allInputs = (char*)malloc((strlen(up->userInput) + 1) * sizeof(char));
+    if (up->allInputs == NULL) {
+        up->allInputs = (char *) malloc((strlen(up->userInput) + 1) * sizeof(char));
         strcpy(up->allInputs, up->userInput);
-    }
-    else
-    {
-        up->allInputs = (char*)realloc(up->allInputs, (strlen(up->userInput) + strlen(up->allInputs) + 1) * sizeof(char));
+    } else {
+        up->allInputs = (char *) realloc(up->allInputs,
+                                         (strlen(up->userInput) + strlen(up->allInputs) + 1) * sizeof(char));
         strcat(up->allInputs, up->userInput);
     }
     // printf("You entered: %s\n", up->allInputs);
@@ -59,45 +61,46 @@ void AppendText(UserParams *up) {
     free(up->userInput);
     up->userInput = NULL;
 }
+
 void NewLine(UserParams *up) {
-    up->allInputs = (char*)realloc(up->allInputs, (strlen(up->allInputs) + 2) * sizeof(char));
+    up->allInputs = (char *) realloc(up->allInputs, (strlen(up->allInputs) + 2) * sizeof(char));
     strcat(up->allInputs, "\n");
     printf("New line was started.\n");
 }
+
 void PrintText(UserParams *up) {
     if (up->allInputs == NULL) {
         printf("There is no text!\n");
-    }
-    else {
+    } else {
         printf("%s", up->allInputs);
         printf("\n");
     }
 }
+
 void Clear(UserParams *up) {
     free(up->allInputs);
     up->allInputs = NULL;
     printf("Console was cleared\n");
 }
+
 void SaveFile(UserParams *up) {
-    FILE * file;
+    FILE *file;
     printf("Enter a title for file: \n");
-    up->userInput = (char*)malloc(up->bufferInput * sizeof(char));
+    up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
     scanf("%s", up->userInput);
     file = fopen(up->userInput, "w");
-    if (file != NULL)
-    {
+    if (file != NULL) {
         fputs(up->allInputs, file);
         fclose(file);
         printf("File created and text saved!\n");
-    }
-    else
-    {
+    } else {
         printf("Error opening file\n");
     }
     free(up->userInput);
 }
+
 void LoadFromFile(UserParams *up) {
-    FILE * file;
+    FILE *file;
     if (up->allInputs != NULL) {
         char dataAnswer[20];
         printf("Do you really want to load a new file? (Yes/No) You have unsaved text: ");
@@ -105,16 +108,12 @@ void LoadFromFile(UserParams *up) {
         for (int i = 0; dataAnswer[i]; i++) {
             dataAnswer[i] = tolower(dataAnswer[i]);
         }
-        if (strcmp(dataAnswer, "yes") == 0)
-        {
-            if (up->allInputs != NULL)
-            {
+        if (strcmp(dataAnswer, "yes") == 0) {
+            if (up->allInputs != NULL) {
                 free(up->allInputs);
                 up->allInputs = NULL;
             }
-         }
-        else
-        {
+        } else {
             return;
         }
     }
@@ -130,10 +129,10 @@ void LoadFromFile(UserParams *up) {
     fseek(file, 0, SEEK_END);
     long fileSize = ftell(file);
     rewind(file);
-    up->userInput = (char*)realloc(up->userInput, (fileSize + 1) * sizeof(char));
+    up->userInput = (char *) realloc(up->userInput, (fileSize + 1) * sizeof(char));
     if (fread(up->userInput, sizeof(char), fileSize, file) == fileSize) {
         up->userInput[fileSize] = '\0';
-        up->allInputs = (char*)realloc(up->allInputs, (fileSize + 1) * sizeof(char));
+        up->allInputs = (char *) realloc(up->allInputs, (fileSize + 1) * sizeof(char));
         strcat(up->allInputs, up->userInput);
         printf("File content loaded\n");
     } else {
@@ -143,6 +142,7 @@ void LoadFromFile(UserParams *up) {
     free(up->userInput);
     up->userInput = NULL;
 }
+
 void SearchText(UserParams *up) {
     int line = 1;
     int charIndex = 1;
@@ -151,13 +151,12 @@ void SearchText(UserParams *up) {
         return;
     }
     printf("Enter text to search: ");
-    up->userInput = (char*)malloc(up->bufferInput * sizeof(char));
+    up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
     scanf("%s", up->userInput);
     char *search = strstr(up->allInputs, up->userInput);
     if (search == NULL) {
         printf("Text was not found.\n");
-    }
-    else {
+    } else {
         char *currentPosition = up->allInputs;
         while (search != NULL) {
             while (currentPosition != search) {
@@ -176,6 +175,7 @@ void SearchText(UserParams *up) {
     free(up->userInput);
     up->userInput = NULL;
 }
+
 void InsertByIndex(UserParams *up) {
     int line;
     int index;
@@ -211,11 +211,12 @@ void InsertByIndex(UserParams *up) {
     }
 
     if (index > numOfChars + 1) {
-        printf("There aren't that many positions to insert! Try again. Number of positions you can insert to: %d\n", numOfChars + 1);
+        printf("There aren't that many positions to insert! Try again. Number of positions you can insert to: %d\n",
+               numOfChars + 1);
         return;
     }
     printf("Enter what do you want to insert: ");
-    up->userInput = (char*)malloc(up->bufferInput * sizeof(char));
+    up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
     scanf("%s", up->userInput);
     if (up->allInputs == NULL) {
         printf("There is no text to insert. Use Append Command!\n");
@@ -223,7 +224,7 @@ void InsertByIndex(UserParams *up) {
         up->userInput = NULL;
         return;
     }
-    char *newBuffer = (char*)malloc(strlen(up->allInputs) + strlen(up->userInput) + 1);
+    char *newBuffer = (char *) malloc(strlen(up->allInputs) + strlen(up->userInput) + 1);
     int currentLine = 1;
     int currentIndex = 1;
     int i = 0;
@@ -245,7 +246,7 @@ void InsertByIndex(UserParams *up) {
     while (up->allInputs[i] != '\0') {
         newBuffer[j++] = up->allInputs[i++];
     }
-    up->allInputs = (char*)realloc(up->allInputs, strlen(newBuffer) * sizeof(char));
+    up->allInputs = (char *) realloc(up->allInputs, strlen(newBuffer) * sizeof(char));
     strcpy(up->allInputs, newBuffer);
     printf("Text was inserted.\n");
     free(newBuffer);
@@ -253,52 +254,53 @@ void InsertByIndex(UserParams *up) {
     free(up->userInput);
     up->userInput = NULL;
 }
+
 void CommandRunner(int command, UserParams *up) {
     switch (command) {
         case COMMAND_HELP:
             ProgramHelper();
-        return;
+            return;
         case COMMAND_APPEND:
             AppendText(up);
-        break;
+            break;
         case START_NEW_LINE:
             NewLine(up);
-        break;
+            break;
         case LOAD_FROM_FILE:
             LoadFromFile(up);
-        break;
+            break;
         case SAVE_TO_FILE:
             SaveFile(up);
-        break;
+            break;
         case PRINT_TEXT:
             PrintText(up);
-        break;
+            break;
         case INSERT_BY_INDEX:
             InsertByIndex(up);
-        break;
+            break;
         case SEARCH_TEXT:
             SearchText(up);
-        break;
+            break;
         case CLEAR_CONSOLE:
             Clear(up);
-        break;
+            break;
         case EXIT:
             Clear(up);
             printf("Thanks for using this program. Bye!");
-        break;;
+            break;;
         default:
             printf("Unknown command\n");
-        break;
+            break;
     }
 }
+
 int main() {
     int command;
     UserParams up{NULL, NULL, 100};
     do {
         CommandParser(&command);
         CommandRunner(command, &up);
-    }
-    while
+    } while
     (
         command != EXIT
     );
