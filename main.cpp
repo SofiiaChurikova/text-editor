@@ -46,7 +46,7 @@ void CommandParser(int *command) {
 void AppendText(UserParams *up) {
     up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
     printf("Enter a string that you want append: ");
-    getline(&up->userInput, &up->bufferInput, stdin);
+    scanf("%s", up->userInput);
     up->userInput[strcspn(up->userInput, "\n")] = '\0';
     if (up->allInputs == NULL) {
         up->allInputs = (char *) malloc((strlen(up->userInput) + 1) * sizeof(char));
@@ -56,21 +56,25 @@ void AppendText(UserParams *up) {
                                          (strlen(up->userInput) + strlen(up->allInputs) + 1) * sizeof(char));
         strcat(up->allInputs, up->userInput);
     }
-    // printf("You entered: %s\n", up->allInputs);
     printf("Text was appended.\n");
     free(up->userInput);
     up->userInput = NULL;
 }
 
 void NewLine(UserParams *up) {
-    up->allInputs = (char *) realloc(up->allInputs, (strlen(up->allInputs) + 2) * sizeof(char));
-    strcat(up->allInputs, "\n");
+    if (up->allInputs == NULL) {
+        up->allInputs = (char *) malloc(2 * sizeof(char));
+        strcpy(up->allInputs, "\n");
+    } else {
+        up->allInputs = (char *) realloc(up->allInputs, (strlen(up->allInputs) + 2) * sizeof(char));
+        strcat(up->allInputs, "\n");
+    }
     printf("New line was started.\n");
 }
 
 void PrintText(UserParams *up) {
     if (up->allInputs == NULL) {
-        printf("There is no text!\n");
+        printf("There is no text to print!\n");
     } else {
         printf("%s", up->allInputs);
         printf("\n");
@@ -78,13 +82,22 @@ void PrintText(UserParams *up) {
 }
 
 void Clear(UserParams *up) {
-    free(up->allInputs);
-    up->allInputs = NULL;
-    printf("Console was cleared\n");
+    if (up->allInputs == NULL) {
+        printf("Console is empty.\n");
+        return;
+    } else {
+        free(up->allInputs);
+        up->allInputs = NULL;
+        printf("Console was cleared.\n");
+    }
 }
 
 void SaveFile(UserParams *up) {
     FILE *file;
+    if (up->allInputs == NULL) {
+        printf("There is no text to save!\n");
+        return;
+    }
     printf("Enter a title for file: \n");
     up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
     scanf("%s", up->userInput);
