@@ -47,8 +47,16 @@ void CommandParser(int *command) {
 void AppendText(UserParams *up) {
     up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
     printf("Enter a string that you want append: ");
-    fgets(up->userInput, up->bufferInput, stdin);
-    up->userInput[strcspn(up->userInput, "\n")] = '\0';
+    size_t len = 0;
+    int i;
+    while ((i = getchar()) != '\n') {
+        if (len + 1 >= up->bufferInput) {
+            up->bufferInput *= 2;
+            up->userInput = (char *) realloc(up->userInput, up->bufferInput * sizeof(char));
+        }
+        up->userInput[len++] = i;
+    }
+    up->userInput[len] = '\0';
     if (up->allInputs == NULL) {
         up->allInputs = (char *) malloc((strlen(up->userInput) + 1) * sizeof(char));
         strcpy(up->allInputs, up->userInput);
@@ -102,7 +110,7 @@ void SaveFile(UserParams *up) {
         printf("There is no text to save!\n");
         return;
     }
-    printf("Enter a title for file: \n");
+    printf("Enter a title for file: ");
     up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
     scanf("%s", up->userInput);
     file = fopen(up->userInput, "w");
@@ -111,7 +119,7 @@ void SaveFile(UserParams *up) {
         printf("File created and text saved!\n");
         up->isSaved = true;
     } else {
-        printf("Error opening file\n");
+        printf("Error opening file.\n");
     }
     fclose(file);
     free(up->userInput);
@@ -142,7 +150,7 @@ void LoadFromFile(UserParams *up) {
     scanf("%s", fileInput);
     file = fopen(fileInput, "r");
     if (file == NULL) {
-        printf("Error opening file\n");
+        printf("Error opening file.\n");
         fclose(file);
         return;
     }
@@ -154,10 +162,10 @@ void LoadFromFile(UserParams *up) {
         up->userInput[fileSize] = '\0';
         up->allInputs = (char *) realloc(up->allInputs, (fileSize + 1) * sizeof(char));
         strcat(up->allInputs, up->userInput);
-        printf("File content loaded\n");
+        printf("File content loaded.\n");
         up->isSaved = true;
     } else {
-        printf("Error reading file\n");
+        printf("Error reading file.\n");
     }
     fclose(file);
     free(up->userInput);
@@ -189,7 +197,7 @@ void SearchText(UserParams *up) {
                 }
                 currentPosition++;
             }
-            printf("Text is present in this position: line %d, index %d\n", line, charIndex);
+            printf("Text was found at: line %d, index %d\n", line, charIndex);
             search = strstr(currentPosition + 1, up->userInput);
         }
     }
@@ -313,7 +321,7 @@ void CommandRunner(int command, UserParams *up) {
             printf("Thanks for using this program. Bye!");
             break;;
         default:
-            printf("Unknown command\n");
+            printf("Unknown command.\n");
             break;
     }
 }
