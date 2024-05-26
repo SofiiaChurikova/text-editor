@@ -5,6 +5,7 @@ struct UserParams {
     char *userInput;
     char *allInputs;
     size_t bufferInput;
+    bool isSaved;
 };
 
 enum Commands {
@@ -59,6 +60,7 @@ void AppendText(UserParams *up) {
     printf("Text was appended.\n");
     free(up->userInput);
     up->userInput = NULL;
+    up->isSaved = false;
 }
 
 void NewLine(UserParams *up) {
@@ -70,6 +72,7 @@ void NewLine(UserParams *up) {
         strcat(up->allInputs, "\n");
     }
     printf("New line was started.\n");
+    up->isSaved = false;
 }
 
 void PrintText(UserParams *up) {
@@ -89,6 +92,7 @@ void Clear(UserParams *up) {
         free(up->allInputs);
         up->allInputs = NULL;
         printf("Console was cleared.\n");
+        up->isSaved = false;
     }
 }
 
@@ -104,30 +108,33 @@ void SaveFile(UserParams *up) {
     file = fopen(up->userInput, "w");
     if (file != NULL) {
         fputs(up->allInputs, file);
-        fclose(file);
         printf("File created and text saved!\n");
+        up->isSaved = true;
     } else {
         printf("Error opening file\n");
     }
+    fclose(file);
     free(up->userInput);
+    up->userInput = NULL;
 }
 
 void LoadFromFile(UserParams *up) {
     FILE *file;
-    if (up->allInputs != NULL) {
+    if (!up->isSaved && up->allInputs != NULL) {
         char dataAnswer[20];
-        printf("Do you really want to load a new file? (Yes/No) You have unsaved text: ");
-        scanf("%s", dataAnswer);
-        for (int i = 0; dataAnswer[i]; i++) {
-            dataAnswer[i] = tolower(dataAnswer[i]);
-        }
-        if (strcmp(dataAnswer, "yes") == 0) {
-            if (up->allInputs != NULL) {
+        while (true) {
+            printf("Do you really want to load a new file? (Yes/No) You have unsaved text: ");
+            scanf("%s", dataAnswer);
+            for (int i = 0; dataAnswer[i]; i++) {
+                dataAnswer[i] = tolower(dataAnswer[i]);
+            }
+            if (strcmp(dataAnswer, "yes") == 0) {
                 free(up->allInputs);
                 up->allInputs = NULL;
+                break;
+            } else {
+                return;
             }
-        } else {
-            return;
         }
     }
     printf("Enter a file that you want to load info from: ");
@@ -148,6 +155,7 @@ void LoadFromFile(UserParams *up) {
         up->allInputs = (char *) realloc(up->allInputs, (fileSize + 1) * sizeof(char));
         strcat(up->allInputs, up->userInput);
         printf("File content loaded\n");
+        up->isSaved = true;
     } else {
         printf("Error reading file\n");
     }
@@ -268,6 +276,7 @@ void InsertByIndex(UserParams *up) {
     newBuffer = NULL;
     free(up->userInput);
     up->userInput = NULL;
+    up->isSaved = false;
 }
 
 void CommandRunner(int command, UserParams *up) {
@@ -311,7 +320,7 @@ void CommandRunner(int command, UserParams *up) {
 
 int main() {
     int command;
-    UserParams up{NULL, NULL, 100};
+    UserParams up{NULL, NULL, 1024, true};
     do {
         CommandParser(&command);
         CommandRunner(command, &up);
