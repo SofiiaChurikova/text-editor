@@ -70,6 +70,7 @@ void PrintText(UserParams *up) {
     }
     else {
         printf("%s", up->allInputs);
+        printf("\n");
     }
 }
 void Clear(UserParams *up) {
@@ -175,6 +176,83 @@ void SearchText(UserParams *up) {
     free(up->userInput);
     up->userInput = NULL;
 }
+void InsertByIndex(UserParams *up) {
+    int line;
+    int index;
+    int numOfLines = 0;
+    printf("Choose line and index: ");
+    scanf("%d %d", &line, &index);
+    if (up->allInputs[0] != '\0') {
+        numOfLines = 1;
+    }
+    for (int l = 0; up->allInputs[l] != '\0'; l++) {
+        if (up->allInputs[l] == '\n') {
+            numOfLines++;
+        }
+    }
+    if (line > numOfLines) {
+        printf("There aren't that many lines! Try again. Number of lines: %d\n", numOfLines);
+        free(up->userInput);
+        up->userInput = NULL;
+        return;
+    }
+    int curLine = 1;
+    int numOfChars = 0;
+    for (int c = 0; up->allInputs[c] != '\0'; c++) {
+        if (curLine == line) {
+            if (up->allInputs[c] == '\n') {
+                break;
+            }
+            numOfChars++;
+        }
+        if (up->allInputs[c] == '\n') {
+            curLine++;
+        }
+    }
+
+    if (index > numOfChars + 1) {
+        printf("There aren't that many positions to insert! Try again. Number of positions you can insert to: %d\n", numOfChars + 1);
+        return;
+    }
+    printf("Enter what do you want to insert: ");
+    up->userInput = (char*)malloc(up->bufferInput * sizeof(char));
+    scanf("%s", up->userInput);
+    if (up->allInputs == NULL) {
+        printf("There is no text to insert. Use Append Command!\n");
+        free(up->userInput);
+        up->userInput = NULL;
+        return;
+    }
+    char *newBuffer = (char*)malloc(strlen(up->allInputs) + strlen(up->userInput) + 1);
+    int currentLine = 1;
+    int currentIndex = 1;
+    int i = 0;
+    int j = 0;
+    int m = 0;
+    while (currentLine < line || currentIndex < index) {
+        newBuffer[j++] = up->allInputs[i];
+        if (up->allInputs[i] == '\n') {
+            currentLine++;
+            currentIndex = 1;
+        } else {
+            currentIndex++;
+        }
+        i++;
+    }
+    while (up->userInput[m] != '\0') {
+        newBuffer[j++] = up->userInput[m++];
+    }
+    while (up->allInputs[i] != '\0') {
+        newBuffer[j++] = up->allInputs[i++];
+    }
+    up->allInputs = (char*)realloc(up->allInputs, strlen(newBuffer) * sizeof(char));
+    strcpy(up->allInputs, newBuffer);
+    printf("Text was inserted.\n");
+    free(newBuffer);
+    newBuffer = NULL;
+    free(up->userInput);
+    up->userInput = NULL;
+}
 void CommandRunner(int command, UserParams *up) {
     switch (command) {
         case COMMAND_HELP:
@@ -196,7 +274,7 @@ void CommandRunner(int command, UserParams *up) {
             PrintText(up);
         break;
         case INSERT_BY_INDEX:
-            printf("Command is not implemented yet \n");
+            InsertByIndex(up);
         break;
         case SEARCH_TEXT:
             SearchText(up);
@@ -205,6 +283,7 @@ void CommandRunner(int command, UserParams *up) {
             Clear(up);
         break;
         case EXIT:
+            Clear(up);
             printf("Thanks for using this program. Bye!");
         break;;
         default:
