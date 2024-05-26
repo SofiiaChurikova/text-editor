@@ -105,3 +105,15 @@ Clear console and exit
 ![Снимок экрана 2024-05-26 в 9 25 48 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/8881d39a-a69c-4f5c-a3c0-07bcc7d0e995)
 ![Снимок экрана 2024-05-26 в 9 27 26 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/e9fd3358-4e76-4c9a-8aeb-272d02ff0693)
 
+
+### 4.
+- Append text
+- Save text to file
+- Open the same file
+- Append text
+- Try to load info, but have unsaved text
+- Exit
+  
+![Снимок экрана 2024-05-26 в 10 01 35 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/fe93bf2c-8b6f-4918-a968-6d84f703c63b)
+
+
