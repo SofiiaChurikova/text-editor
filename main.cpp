@@ -46,7 +46,7 @@ void CommandParser(int *command) {
 void AppendText(UserParams *up) {
     up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
     printf("Enter a string that you want append: ");
-    scanf("%s", up->userInput);
+    fgets(up->userInput, up->bufferInput, stdin);
     up->userInput[strcspn(up->userInput, "\n")] = '\0';
     if (up->allInputs == NULL) {
         up->allInputs = (char *) malloc((strlen(up->userInput) + 1) * sizeof(char));
