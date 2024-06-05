@@ -24,7 +24,8 @@ public:
             "6 - Insert the text by line and symbol \n"
             "7 - Search the text \n"
             "8 - Clear the console \n"
-            "9 - Exit \n");
+            "9 - Delete number of symbols by line and index"
+            "10 - Exit \n");
     }
 
     static void AppendText(UserParams *up) {
@@ -153,7 +154,6 @@ public:
                 curLine++;
             }
         }
-
         if (index > numOfChars + 1) {
             printf("There aren't that many positions to insert! Try again. Number of positions you can insert to: %d\n",
                    numOfChars + 1);
@@ -171,24 +171,12 @@ public:
         getline(&up->userInput, &up->bufferInput, stdin);
         up->userInput[strcspn(up->userInput, "\n")] = '\0';
         char *newBuffer = (char *) malloc(strlen(up->allInputs) + strlen(up->userInput) + 1);
-        int currentLine = 1;
-        int currentIndex = 1;
-        int i = 0;
-        int j = 0;
+        int j = copyUntilPosition(up->allInputs, newBuffer, line, index);
         int m = 0;
-        while (currentLine < line || currentIndex < index) {
-            newBuffer[j++] = up->allInputs[i];
-            if (up->allInputs[i] == '\n') {
-                currentLine++;
-                currentIndex = 1;
-            } else {
-                currentIndex++;
-            }
-            i++;
-        }
         while (up->userInput[m] != '\0') {
             newBuffer[j++] = up->userInput[m++];
         }
+        int i = 0;
         while (up->allInputs[i] != '\0') {
             newBuffer[j++] = up->allInputs[i++];
         }
@@ -199,6 +187,50 @@ public:
         newBuffer = NULL;
         free(up->userInput);
         up->userInput = NULL;
+        up->isSaved = false;
+    }
+
+    static int copyUntilPosition(char *source, char *destination, int line, int index) {
+        int currentLine = 1;
+        int currentIndex = 1;
+        int i = 0;
+        int j = 0;
+        while (currentLine < line || currentIndex < index) {
+            destination[j++] = source[i];
+            if (source[i] == '\n') {
+                currentLine++;
+                currentIndex = 1;
+            } else {
+                currentIndex++;
+            }
+            i++;
+        }
+        return i;
+    }
+
+    static void Delete(UserParams *up) {
+        int line;
+        int index;
+        int userSymbol;
+        printf("Choose line, index and number of symbols to delete: ");
+        scanf("%d %d %d", &line, &index, &userSymbol);
+        char *newBuffer = (char *) malloc(strlen(up->allInputs) + 1);
+        int i = copyUntilPosition(up->allInputs, newBuffer, line, index);
+        int j = i;
+        while (userSymbol > 0 && up->allInputs[i] != '\0') {
+            i++;
+            userSymbol--;
+        }
+        while (up->allInputs[i] != '\0') {
+            newBuffer[j++] = up->allInputs[i++];
+        }
+        newBuffer[j] = '\0';
+        up->allInputs = (char *) realloc(up->allInputs, (strlen(newBuffer) + 1) * sizeof(char));
+        strcpy(up->allInputs, newBuffer);
+
+        printf("Text was deleted.\n");
+        free(newBuffer);
+        newBuffer = NULL;
         up->isSaved = false;
     }
 };
@@ -292,7 +324,8 @@ public:
         INSERT_BY_INDEX = 6,
         SEARCH_TEXT = 7,
         CLEAR_CONSOLE = 8,
-        EXIT = 9
+        DELETE = 9,
+        EXIT = 10
     };
 
     static void CommandParser(int *command) {
@@ -332,6 +365,9 @@ public:
                 break;
             case CLEAR_CONSOLE:
                 editor.Clear(up);
+                break;
+            case DELETE:
+                editor.Delete(up);
                 break;
             case EXIT:
                 editor.Clear(up);
