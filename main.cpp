@@ -13,6 +13,8 @@ public:
     char *redoFirst = NULL;
     char *redoSecond = NULL;
     char *redoThird = NULL;
+    char *cutBuffer = NULL;
+    char *copyBuffer = NULL;
 
     UserParams() {
         allInputs = (char *) malloc(1);
@@ -39,7 +41,11 @@ public:
             "9 - Delete number of symbols by line and index \n"
             "10 - Undo \n"
             "11 - Redo \n"
-            "12 - Exit \n");
+            "12 - Cut \n"
+            "13 - Copy \n"
+            "14 - Paste \n"
+            "15 - Insert with replacement \n"
+            "16 - Exit \n");
     }
 
     static void SaveState(UserParams *up) {
@@ -253,34 +259,41 @@ public:
         }
         return i;
     }
-
-    static void Delete(UserParams *up) {
+    static char* DeleteText(UserParams *up, int line, int index, int numSymbols) {
         SaveState(up);
-        int line;
-        int index;
-        int userSymbol;
-        printf("Choose line, index and number of symbols to delete: ");
-        scanf("%d %d %d", &line, &index, &userSymbol);
         char *newBuffer = (char *) malloc(strlen(up->allInputs) + 1);
         int i = copyUntilIndex(up->allInputs, newBuffer, line, index);
         int j = i;
-        while (userSymbol > 0 && up->allInputs[i] != '\0') {
+        char *deletedText = (char *) malloc((numSymbols + 1) * sizeof(char));
+        int k = 0;
+        while (numSymbols > 0 && up->allInputs[i] != '\0') {
+            if (deletedText != NULL) {
+                deletedText[k++] = up->allInputs[i];
+            }
             i++;
-            userSymbol--;
+            numSymbols--;
         }
+        deletedText[k] = '\0';
         while (up->allInputs[i] != '\0') {
             newBuffer[j++] = up->allInputs[i++];
         }
         newBuffer[j] = '\0';
         up->allInputs = (char *) realloc(up->allInputs, (strlen(newBuffer) + 1) * sizeof(char));
         strcpy(up->allInputs, newBuffer);
-
-        printf("Text was deleted.\n");
         free(newBuffer);
         newBuffer = NULL;
         up->isSaved = false;
+        return deletedText;
     }
 
+    static void Delete(UserParams *up) {
+        int line, index, numSymbols;
+        printf("Choose line, index and number of symbols to delete: ");
+        scanf("%d %d %d", &line, &index, &numSymbols);
+        char *deletedText = DeleteText(up, line, index, numSymbols);
+        printf("Text was deleted.\n");
+        free(deletedText);
+    }
 
     void Undo(UserParams *up) {
         if (up->undoFirst != NULL) {
@@ -335,6 +348,18 @@ public:
         } else {
             printf("No actions to redo.\n");
         }
+    }
+    void Cut(UserParams *up) {
+        int line, index, numSymbols;
+        SaveState(up);
+        if (up->cutBuffer != NULL) {
+            free(up->cutBuffer);
+        }
+        printf("Choose line and index and number of symbols: ");
+        scanf("%d %d %d", &line, &index, &numSymbols);
+        getchar();
+        up->cutBuffer = DeleteText(up, line, index, numSymbols);
+        printf("Text was cut.\n");
     }
 };
 
@@ -430,7 +455,11 @@ public:
         DELETE = 9,
         UNDO = 10,
         REDO = 11,
-        EXIT = 12
+        CUT = 12,
+        COPY = 13,
+        PASTE = 14,
+        INSERT_WITH_REPLACEMENT = 15,
+        EXIT = 16
     };
 
     static void CommandParser(int *command) {
@@ -480,6 +509,18 @@ public:
             case REDO:
                 editor.Redo(up);
                 break;
+            case CUT:
+                editor.Cut(up);
+            break;
+            case COPY:
+                printf("Command is not implemented yet");
+            break;
+            case PASTE:
+                printf("Command is not implemented yet");
+            break;
+            case INSERT_WITH_REPLACEMENT:
+                printf("Command is not implemented yet");
+            break;
             case EXIT:
                 editor.Clear(up);
                 printf("Thanks for using this program. Bye!");
