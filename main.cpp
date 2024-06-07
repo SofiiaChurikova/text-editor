@@ -7,7 +7,19 @@ public:
     char *allInputs = NULL;
     size_t bufferInput = 256;
     bool isSaved = true;
+    char *undoFirst = NULL;
+    char *undoSecond = NULL;
+    char *undoThird = NULL;
+    char *redoFirst = NULL;
+    char *redoSecond = NULL;
+    char *redoThird = NULL;
+
+    UserParams() {
+        allInputs = (char *) malloc(1);
+        allInputs[0] = '\0';
+    }
 };
+
 
 class TextEditor {
 public:
@@ -24,11 +36,42 @@ public:
             "6 - Insert the text by line and symbol \n"
             "7 - Search the text \n"
             "8 - Clear the console \n"
-            "9 - Delete number of symbols by line and index"
-            "10 - Exit \n");
+            "9 - Delete number of symbols by line and index \n"
+            "10 - Undo \n"
+            "11 - Redo \n"
+            "12 - Exit \n");
+    }
+
+    static void SaveState(UserParams *up) {
+        if (up->undoThird != NULL) {
+            free(up->undoThird);
+        }
+        up->undoThird = up->undoSecond;
+        up->undoSecond = up->undoFirst;
+        if (up->allInputs != NULL) {
+            size_t len = strnlen(up->allInputs, up->bufferInput);
+            up->undoFirst = (char *) malloc((len + 1) * sizeof(char));
+            strncpy(up->undoFirst, up->allInputs, len);
+            up->undoFirst[len] = '\0';
+        } else {
+            up->undoFirst = NULL;
+        }
+        if (up->redoFirst != NULL) {
+            free(up->redoFirst);
+            up->redoFirst = NULL;
+        }
+        if (up->redoSecond != NULL) {
+            free(up->redoSecond);
+            up->redoSecond = NULL;
+        }
+        if (up->redoThird != NULL) {
+            free(up->redoThird);
+            up->redoThird = NULL;
+        }
     }
 
     static void AppendText(UserParams *up) {
+        SaveState(up);
         up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
         printf("Enter a string that you want append: ");
         size_t len = 0;
@@ -56,6 +99,7 @@ public:
     }
 
     static void NewLine(UserParams *up) {
+        SaveState(up);
         if (up->allInputs == NULL) {
             up->allInputs = (char *) malloc(2 * sizeof(char));
             strcpy(up->allInputs, "\n");
@@ -77,6 +121,7 @@ public:
     }
 
     static void Clear(UserParams *up) {
+        SaveState(up);
         if (up->allInputs == NULL) {
             printf("Console is empty.\n");
             return;
@@ -122,6 +167,7 @@ public:
     }
 
     static void InsertByIndex(UserParams *up) {
+        SaveState(up);
         int line;
         int index;
         int numOfLines = 0;
@@ -171,7 +217,7 @@ public:
         getline(&up->userInput, &up->bufferInput, stdin);
         up->userInput[strcspn(up->userInput, "\n")] = '\0';
         char *newBuffer = (char *) malloc(strlen(up->allInputs) + strlen(up->userInput) + 1);
-        int j = copyUntilPosition(up->allInputs, newBuffer, line, index);
+        int j = copyUntilIndex(up->allInputs, newBuffer, line, index);
         int m = 0;
         while (up->userInput[m] != '\0') {
             newBuffer[j++] = up->userInput[m++];
@@ -190,7 +236,7 @@ public:
         up->isSaved = false;
     }
 
-    static int copyUntilPosition(char *source, char *destination, int line, int index) {
+    static int copyUntilIndex(char *source, char *destination, int line, int index) {
         int currentLine = 1;
         int currentIndex = 1;
         int i = 0;
@@ -209,13 +255,14 @@ public:
     }
 
     static void Delete(UserParams *up) {
+        SaveState(up);
         int line;
         int index;
         int userSymbol;
         printf("Choose line, index and number of symbols to delete: ");
         scanf("%d %d %d", &line, &index, &userSymbol);
         char *newBuffer = (char *) malloc(strlen(up->allInputs) + 1);
-        int i = copyUntilPosition(up->allInputs, newBuffer, line, index);
+        int i = copyUntilIndex(up->allInputs, newBuffer, line, index);
         int j = i;
         while (userSymbol > 0 && up->allInputs[i] != '\0') {
             i++;
@@ -232,6 +279,62 @@ public:
         free(newBuffer);
         newBuffer = NULL;
         up->isSaved = false;
+    }
+
+
+    void Undo(UserParams *up) {
+        if (up->undoFirst != NULL) {
+            if (up->redoThird != NULL) {
+                free(up->redoThird);
+            }
+            up->redoThird = up->redoSecond;
+            up->redoSecond = up->redoFirst;
+            if (up->allInputs != NULL) {
+                size_t len = strnlen(up->allInputs, up->bufferInput);
+                up->redoFirst = (char *) malloc((len + 1) * sizeof(char));
+                strncpy(up->redoFirst, up->allInputs, len);
+                up->redoFirst[len] = '\0';
+            } else {
+                up->redoFirst = NULL;
+            }
+            free(up->allInputs);
+            up->allInputs = up->undoFirst;
+            up->undoFirst = up->undoSecond;
+            up->undoSecond = up->undoThird;
+            up->undoThird = NULL;
+            printf("Undo completed.\n");
+            up->isSaved = false;
+        } else {
+            printf("No actions to undo.\n");
+        }
+    }
+
+    void Redo(UserParams *up) {
+        if (up->redoFirst != NULL) {
+            if (up->undoThird != NULL) {
+                free(up->undoThird);
+            }
+            up->undoThird = up->undoSecond;
+            up->undoSecond = up->undoFirst;
+            if (up->allInputs != NULL) {
+                size_t len = strnlen(up->allInputs, up->bufferInput);
+                up->undoFirst = (char *) malloc((len + 1) * sizeof(char));
+                strncpy(up->undoFirst, up->allInputs, len);
+                up->undoFirst[len] = '\0';
+            } else {
+                up->undoFirst = NULL;
+            }
+            free(up->allInputs);
+            up->allInputs = up->redoFirst;
+            up->redoFirst = up->redoSecond;
+            up->redoSecond = up->redoThird;
+            up->redoThird = NULL;
+
+            printf("Redo completed.\n");
+            up->isSaved = false;
+        } else {
+            printf("No actions to redo.\n");
+        }
     }
 };
 
@@ -325,7 +428,9 @@ public:
         SEARCH_TEXT = 7,
         CLEAR_CONSOLE = 8,
         DELETE = 9,
-        EXIT = 10
+        UNDO = 10,
+        REDO = 11,
+        EXIT = 12
     };
 
     static void CommandParser(int *command) {
@@ -368,6 +473,12 @@ public:
                 break;
             case DELETE:
                 editor.Delete(up);
+                break;
+            case UNDO:
+                editor.Undo(up);
+                break;
+            case REDO:
+                editor.Redo(up);
                 break;
             case EXIT:
                 editor.Clear(up);
