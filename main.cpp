@@ -13,8 +13,7 @@ public:
     char *redoFirst = NULL;
     char *redoSecond = NULL;
     char *redoThird = NULL;
-    char *cutBuffer = NULL;
-    char *copyBuffer = NULL;
+    char *pasteBuffer = NULL;
 
     UserParams() {
         allInputs = (char *) malloc(1);
@@ -259,7 +258,8 @@ public:
         }
         return i;
     }
-    static char* DeleteText(UserParams *up, int line, int index, int numSymbols) {
+
+    static char *DeleteText(UserParams *up, int line, int index, int numSymbols) {
         SaveState(up);
         char *newBuffer = (char *) malloc(strlen(up->allInputs) + 1);
         int i = copyUntilIndex(up->allInputs, newBuffer, line, index);
@@ -349,17 +349,63 @@ public:
             printf("No actions to redo.\n");
         }
     }
+
     void Cut(UserParams *up) {
         int line, index, numSymbols;
-        SaveState(up);
-        if (up->cutBuffer != NULL) {
-            free(up->cutBuffer);
+        if (up->pasteBuffer != NULL) {
+            free(up->pasteBuffer);
         }
         printf("Choose line and index and number of symbols: ");
         scanf("%d %d %d", &line, &index, &numSymbols);
         getchar();
-        up->cutBuffer = DeleteText(up, line, index, numSymbols);
+        up->pasteBuffer = DeleteText(up, line, index, numSymbols);
         printf("Text was cut.\n");
+    }
+
+    void Copy(UserParams *up) {
+        SaveState(up);
+        int line, index, numSymbols;
+        if (up->pasteBuffer != NULL) {
+            free(up->pasteBuffer);
+        }
+        printf("Choose line, index and number of symbols: ");
+        scanf("%d %d %d", &line, &index, &numSymbols);
+        getchar();
+        up->pasteBuffer = (char *) malloc((numSymbols + 1) * sizeof(char));
+        int start = copyUntilIndex(up->allInputs, up->pasteBuffer, line, index);
+        strncpy(up->pasteBuffer, up->allInputs + start, numSymbols);
+        up->pasteBuffer[numSymbols] = '\0';
+        up->isSaved = false;
+        printf("Text was copied\n");
+    }
+
+    void Paste(UserParams *up) {
+        SaveState(up);
+        int line, index;
+        printf("Choose line and index: ");
+        scanf("%d %d", &line, &index);
+        getchar();
+        if (up->pasteBuffer == NULL) {
+            printf("There is nothing to paste!\n");
+            return;
+        }
+        char *Buffer = (char *) malloc(strnlen(up->allInputs, up->bufferInput)
+                                       + strnlen(up->pasteBuffer, up->bufferInput) + 1);
+        int j = copyUntilIndex(up->allInputs, Buffer, line, index);
+        int i = 0;
+        while (up->pasteBuffer[i] != '\0') {
+            Buffer[j++] = up->pasteBuffer[i++];
+        }
+        int k = 0;
+        while (up->allInputs[k] != '\0') {
+            Buffer[j++] = up->allInputs[k++];
+        }
+        Buffer[j] = '\0';
+        up->allInputs = (char *) realloc(up->allInputs, (strnlen(Buffer, up->bufferInput) + 1) * sizeof(char));
+        strncpy(up->allInputs, Buffer, up->bufferInput);
+        printf("Text was pasted.\n");
+        free(Buffer);
+        up->isSaved = false;
     }
 };
 
@@ -511,16 +557,16 @@ public:
                 break;
             case CUT:
                 editor.Cut(up);
-            break;
+                break;
             case COPY:
-                printf("Command is not implemented yet");
-            break;
+                editor.Copy(up);
+                break;
             case PASTE:
-                printf("Command is not implemented yet");
-            break;
+                editor.Paste(up);
+                break;
             case INSERT_WITH_REPLACEMENT:
                 printf("Command is not implemented yet");
-            break;
+                break;
             case EXIT:
                 editor.Clear(up);
                 printf("Thanks for using this program. Bye!");
