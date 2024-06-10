@@ -401,11 +401,12 @@ public:
         while (up->pasteBuffer[i] != '\0') {
             Buffer[j++] = up->pasteBuffer[i++];
         }
-        int k = 0;
+        int k = copyUntilIndex(up->allInputs, NULL, line, index);
         while (up->allInputs[k] != '\0') {
             Buffer[j++] = up->allInputs[k++];
         }
         Buffer[j] = '\0';
+
         up->allInputs = (char *) realloc(up->allInputs, (strnlen(Buffer, up->bufferInput) + 1) * sizeof(char));
         strncpy(up->allInputs, Buffer, up->bufferInput);
         printf("Text was pasted.\n");
