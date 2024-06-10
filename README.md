@@ -1,5 +1,5 @@
 # Text-editor as first assignment at Programming Paradigms
-In overall program has 10 commands:
+In overall program has 17 commands:
 1. Help
 2. Append text
 3. Start the new line
@@ -9,7 +9,14 @@ In overall program has 10 commands:
 7. Insert the text by line and symbol
 8. Search the text
 9. Clear the console
-10. Exit
+10. Delete number of symbols by line and index
+11. Undo
+12. Redo
+13. Cut
+14. Copy
+15. Paste
+16. Insert with replacement
+17. Exit
 
 ## Commands information
 
@@ -61,13 +68,50 @@ Load information to the console from file
 ![Снимок экрана 2024-05-26 в 8 53 20 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/978becdb-82e7-4434-a431-1626c7236e94)
 
 
-### 9. Exit
+### 9. Delete number of symbols by line and index
+
+![Снимок экрана 2024-06-11 в 2 19 13 AM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/0b4ddb00-079d-4899-bb01-8454c0b7eef4)
+
+
+### 10. Undo
+
+![Снимок экрана 2024-06-11 в 2 20 55 AM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/6d450af7-4d52-4340-abaf-c7ca84c33781)
+
+### 11. Redo
+
+![Снимок экрана 2024-06-11 в 2 21 36 AM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/3ee9772f-d432-4eb3-9726-0c67ec03ff56)
+
+### 12. Cut
+
+![Снимок экрана 2024-06-11 в 2 23 38 AM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/ec78548b-a21b-464e-b6f2-1e0adc86500c)
+
+### 13. Copy
+
+![Снимок экрана 2024-06-11 в 2 24 48 AM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/3f75173e-87b4-4a01-980e-4fca7a66d2bf)
+
+### 14. Paste
+
+With cut
+
+![Снимок экрана 2024-06-11 в 2 27 09 AM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/500ca0bd-eada-4cf9-a424-13a004f690ef)
+
+
+With copy
+
+![Снимок экрана 2024-06-11 в 2 30 04 AM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/11beac24-7f24-4a6b-b793-9a1e1ccfe464)
+
+
+### 15. Insert with replacement
+
+![Снимок экрана 2024-06-11 в 2 31 42 AM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/ed06dab3-634c-4aea-8335-4d5992b21fd7)
+
+### 16. Exit
 Clear console and exit
 
 ![Снимок экрана 2024-05-26 в 8 54 07 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/3f69ecb0-f041-4338-997d-6872f7462ab9)
 
 
-## Commands usage tests
+## Commands usage tests FIRST TASK
 ### 1.
 - Append text
 - Start new line
@@ -115,5 +159,16 @@ Clear console and exit
 - Exit
   
 ![Снимок экрана 2024-05-26 в 10 01 35 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/fe93bf2c-8b6f-4918-a968-6d84f703c63b)
+
+
+## Commands usage tests SECOND TASK
+### 1. 
+- Append text
+- Delete number of symbols by line and index
+- Undo
+- Redo
+- Insert with replacement
+
+![Снимок экрана 2024-06-11 в 2 38 24 AM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/dc5aee42-0bdb-450d-8bef-2f9aae5a979c)
 
 
