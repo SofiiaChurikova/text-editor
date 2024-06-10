@@ -246,8 +246,13 @@ public:
         int currentIndex = 1;
         int i = 0;
         int j = 0;
-        while (currentLine < line || currentIndex < index) {
-            destination[j++] = source[i];
+        while (source[i] != '\0') {
+            if (currentLine == line && currentIndex == index) {
+                break;
+            }
+            if (destination != NULL) {
+                destination[j++] = source[i];
+            }
             if (source[i] == '\n') {
                 currentLine++;
                 currentIndex = 1;
@@ -407,6 +412,35 @@ public:
         free(Buffer);
         up->isSaved = false;
     }
+
+    void InsertWithReplacement(UserParams *up) {
+        int line, index;
+        printf("Choose line and index: ");
+        scanf("%d %d", &line, &index);
+        getchar();
+        printf("Write text: ");
+        up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
+        fgets(up->userInput, up->bufferInput, stdin);
+        up->userInput[strcspn(up->userInput, "\n")] = '\0';
+        int insertPos = copyUntilIndex(up->allInputs, NULL, line, index);
+        int lengthDelete = 0;
+        for (int i = insertPos; up->allInputs[i] != ' ' && up->allInputs[i] != '\0'; i++) {
+            lengthDelete++;
+        }
+        char *Buffer = (char *) malloc(
+            strnlen(up->allInputs, up->bufferInput) + strnlen(up->userInput, up->bufferInput) + 1 - lengthDelete);
+        strncpy(Buffer, up->allInputs, insertPos);
+        Buffer[insertPos] = '\0';
+        strncat(Buffer, up->userInput, up->bufferInput);
+        strncat(Buffer, up->allInputs + insertPos + lengthDelete, up->bufferInput);
+        up->allInputs = (char *) realloc(up->allInputs, strlen(Buffer) + 1);
+        strncpy(up->allInputs, Buffer, up->bufferInput);
+        printf("Text was inserted with replacement.\n");
+        free(Buffer);
+        free(up->userInput);
+        Buffer = NULL;
+        up->userInput = NULL;
+    }
 };
 
 class FileHandler {
@@ -565,7 +599,7 @@ public:
                 editor.Paste(up);
                 break;
             case INSERT_WITH_REPLACEMENT:
-                printf("Command is not implemented yet");
+                editor.InsertWithReplacement(up);
                 break;
             case EXIT:
                 editor.Clear(up);
