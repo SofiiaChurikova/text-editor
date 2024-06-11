@@ -145,8 +145,11 @@ Clear console and exit
 - Search a word in text
 - Clear console
 - Try to print text, but text in console is empty
+  
 ![Снимок экрана 2024-05-26 в 9 25 31 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/5618406b-4dc0-4bd7-a8b7-724d1ad594e1)
+
 ![Снимок экрана 2024-05-26 в 9 25 48 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/8881d39a-a69c-4f5c-a3c0-07bcc7d0e995)
+
 ![Снимок экрана 2024-05-26 в 9 27 26 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/e9fd3358-4e76-4c9a-8aeb-272d02ff0693)
 
 
@@ -170,5 +173,52 @@ Clear console and exit
 - Insert with replacement
 
 ![Снимок экрана 2024-06-11 в 2 38 24 AM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/dc5aee42-0bdb-450d-8bef-2f9aae5a979c)
+
+### 2.
+- Append text
+- Copy
+- New line
+- Paste
+- Cut
+- Paste
+- Insert with replacement
+
+![Снимок экрана 2024-06-11 в 2 55 13 AM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/08529916-fed7-4077-9be3-36eadf81a8f6)
+
+### 3.
+- Append text
+- New line
+- Append text
+- Undo
+- Undo
+- Redo
+- Redo
+- Copy
+- Paste
+- Undo
+- Undo
+- Undo
+
+![Снимок экрана 2024-06-11 в 2 59 57 AM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/ca1e4a60-309b-49ea-bd80-488faf0bfd11)
+
+![Снимок экрана 2024-06-11 в 3 00 29 AM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/a139bd66-93f7-4675-93e1-9c9747b73bba)
+
+
+### 4.
+- Load the information from the file
+- Copy
+- Paste
+- Undo
+- Delete number of symbols by line and index
+- Undo
+- Paste
+- Save the information to the file
+
+![Снимок экрана 2024-06-11 в 3 13 15 AM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/92865327-f134-414c-953a-47b6e1b1f0be)
+
+![Снимок экрана 2024-06-11 в 3 13 41 AM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/38b0660f-a047-4550-aed0-eae8069c7912)
+
+![Снимок экрана 2024-06-11 в 3 14 24 AM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/069c9678-063b-4fb4-afdd-00bb78e09f00)
+
 
 
