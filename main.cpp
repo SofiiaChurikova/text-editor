@@ -20,13 +20,11 @@ public:
         allInputs[0] = '\0';
     }
 };
-
-
 class TextEditor {
 public:
     UserParams up;
 
-    static void ProgramHelper() {
+     void ProgramHelper() {
         printf("Hello! This is a Simple Text Editor. You can use these commands: \n"
             "0 - Help \n"
             "1 - Append text \n"
@@ -47,7 +45,7 @@ public:
             "16 - Exit \n");
     }
 
-    static void SaveState(UserParams *up) {
+    void SaveState(UserParams *up) {
         if (up->undoThird != NULL) {
             free(up->undoThird);
         }
@@ -75,7 +73,7 @@ public:
         }
     }
 
-    static void AppendText(UserParams *up) {
+    void AppendText(UserParams *up) {
         SaveState(up);
         up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
         printf("Enter a string that you want append: ");
@@ -103,7 +101,7 @@ public:
         up->isSaved = false;
     }
 
-    static void NewLine(UserParams *up) {
+    void NewLine(UserParams *up) {
         SaveState(up);
         if (up->allInputs == NULL) {
             up->allInputs = (char *) malloc(2 * sizeof(char));
@@ -116,7 +114,7 @@ public:
         up->isSaved = false;
     }
 
-    static void PrintText(UserParams *up) {
+    void PrintText(UserParams *up) {
         if (up->allInputs == NULL) {
             printf("There is no text to print!\n");
         } else {
@@ -125,7 +123,7 @@ public:
         }
     }
 
-    static void Clear(UserParams *up) {
+    void Clear(UserParams *up) {
         SaveState(up);
         if (up->allInputs == NULL) {
             printf("Console is empty.\n");
@@ -138,7 +136,7 @@ public:
         }
     }
 
-    static void SearchText(UserParams *up) {
+    void SearchText(UserParams *up) {
         int line = 1;
         int charIndex = 1;
         if (up->allInputs == NULL) {
@@ -171,7 +169,7 @@ public:
         up->userInput = NULL;
     }
 
-    static void InsertByIndex(UserParams *up) {
+    void InsertByIndex(UserParams *up) {
         SaveState(up);
         int line;
         int index;
@@ -241,7 +239,7 @@ public:
         up->isSaved = false;
     }
 
-    static int copyUntilIndex(char *source, char *destination, int line, int index) {
+    int copyUntilIndex(char *source, char *destination, int line, int index) {
         int currentLine = 1;
         int currentIndex = 1;
         int i = 0;
@@ -264,7 +262,7 @@ public:
         return i;
     }
 
-    static char *DeleteText(UserParams *up, int line, int index, int numSymbols) {
+    char *DeleteText(UserParams *up, int line, int index, int numSymbols) {
         SaveState(up);
         char *newBuffer = (char *) malloc(strlen(up->allInputs) + 1);
         int i = copyUntilIndex(up->allInputs, newBuffer, line, index);
@@ -291,7 +289,7 @@ public:
         return deletedText;
     }
 
-    static void Delete(UserParams *up) {
+    void Delete(UserParams *up) {
         int line, index, numSymbols;
         printf("Choose line, index and number of symbols to delete: ");
         scanf("%d %d %d", &line, &index, &numSymbols);
@@ -448,7 +446,7 @@ class FileHandler {
 public:
     UserParams up;
 
-    static void SaveFile(UserParams *up) {
+    void SaveFile(UserParams *up) {
         FILE *file;
         if (up->allInputs == NULL) {
             printf("There is no text to save!\n");
@@ -470,7 +468,7 @@ public:
         up->userInput = NULL;
     }
 
-    static void LoadFromFile(UserParams *up) {
+    void LoadFromFile(UserParams *up) {
         FILE *file;
         if (!up->isSaved && up->allInputs != NULL) {
             char dataAnswer[20];
