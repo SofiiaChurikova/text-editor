@@ -3,28 +3,29 @@
 
 class UserParams {
 public:
-    char *userInput = NULL;
-    char *allInputs = NULL;
-    size_t bufferInput = 256;
+    char *userInput = nullptr;
+    char *allInputs = nullptr;
+    size_t bufferInput = 768;
     bool isSaved = true;
-    char *undoFirst = NULL;
-    char *undoSecond = NULL;
-    char *undoThird = NULL;
-    char *redoFirst = NULL;
-    char *redoSecond = NULL;
-    char *redoThird = NULL;
-    char *pasteBuffer = NULL;
+    char *undoFirst = nullptr;
+    char *undoSecond = nullptr;
+    char *undoThird = nullptr;
+    char *redoFirst = nullptr;
+    char *redoSecond = nullptr;
+    char *redoThird = nullptr;
+    char *pasteBuffer = nullptr;
 
     UserParams() {
         allInputs = (char *) malloc(1);
         allInputs[0] = '\0';
     }
 };
+
 class TextEditor {
-public:
     UserParams up;
 
-     void ProgramHelper() {
+public:
+    void ProgramHelper() {
         printf("Hello! This is a Simple Text Editor. You can use these commands: \n"
             "0 - Help \n"
             "1 - Append text \n"
@@ -46,32 +47,24 @@ public:
     }
 
     void SaveState(UserParams *up) {
-        if (up->undoThird != NULL) {
-            free(up->undoThird);
-        }
+        free(up->undoThird);
         up->undoThird = up->undoSecond;
         up->undoSecond = up->undoFirst;
-        if (up->allInputs != NULL) {
+        if (up->allInputs != nullptr) {
             size_t len = strnlen(up->allInputs, up->bufferInput);
             up->undoFirst = (char *) malloc((len + 1) * sizeof(char));
-            strncpy(up->undoFirst, up->allInputs, len);
-            up->undoFirst[len] = '\0';
+            strncpy(up->undoFirst, up->allInputs, up->bufferInput);
         } else {
-            up->undoFirst = NULL;
+            up->undoFirst = nullptr;
         }
-        if (up->redoFirst != NULL) {
-            free(up->redoFirst);
-            up->redoFirst = NULL;
-        }
-        if (up->redoSecond != NULL) {
-            free(up->redoSecond);
-            up->redoSecond = NULL;
-        }
-        if (up->redoThird != NULL) {
-            free(up->redoThird);
-            up->redoThird = NULL;
-        }
+        free(up->redoFirst);
+        up->redoFirst = nullptr;
+        free(up->redoSecond);
+        up->redoSecond = nullptr;
+        free(up->redoThird);
+        up->redoThird = nullptr;
     }
+
 
     void AppendText(UserParams *up) {
         SaveState(up);
@@ -87,7 +80,7 @@ public:
             up->userInput[len++] = i;
         }
         up->userInput[len] = '\0';
-        if (up->allInputs == NULL) {
+        if (up->allInputs == nullptr) {
             up->allInputs = (char *) malloc((strlen(up->userInput) + 1) * sizeof(char));
             strcpy(up->allInputs, up->userInput);
         } else {
@@ -97,13 +90,13 @@ public:
         }
         printf("Text was appended.\n");
         free(up->userInput);
-        up->userInput = NULL;
+        up->userInput = nullptr;
         up->isSaved = false;
     }
 
     void NewLine(UserParams *up) {
         SaveState(up);
-        if (up->allInputs == NULL) {
+        if (up->allInputs == nullptr) {
             up->allInputs = (char *) malloc(2 * sizeof(char));
             strcpy(up->allInputs, "\n");
         } else {
@@ -115,7 +108,7 @@ public:
     }
 
     void PrintText(UserParams *up) {
-        if (up->allInputs == NULL) {
+        if (up->allInputs == nullptr) {
             printf("There is no text to print!\n");
         } else {
             printf("%s", up->allInputs);
@@ -125,12 +118,12 @@ public:
 
     void Clear(UserParams *up) {
         SaveState(up);
-        if (up->allInputs == NULL) {
+        if (up->allInputs == nullptr) {
             printf("Console is empty.\n");
             return;
         } else {
             free(up->allInputs);
-            up->allInputs = NULL;
+            up->allInputs = nullptr;
             printf("Console was cleared.\n");
             up->isSaved = false;
         }
@@ -139,7 +132,7 @@ public:
     void SearchText(UserParams *up) {
         int line = 1;
         int charIndex = 1;
-        if (up->allInputs == NULL) {
+        if (up->allInputs == nullptr) {
             printf("There is no text to search!\n");
             return;
         }
@@ -147,11 +140,11 @@ public:
         up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
         scanf("%s", up->userInput);
         char *search = strstr(up->allInputs, up->userInput);
-        if (search == NULL) {
+        if (search == nullptr) {
             printf("Text was not found.\n");
         } else {
             char *currentPosition = up->allInputs;
-            while (search != NULL) {
+            while (search != nullptr) {
                 while (currentPosition != search) {
                     if (*currentPosition == '\n') {
                         line++;
@@ -166,7 +159,7 @@ public:
             }
         }
         free(up->userInput);
-        up->userInput = NULL;
+        up->userInput = nullptr;
     }
 
     void InsertByIndex(UserParams *up) {
@@ -187,7 +180,7 @@ public:
         if (line > numOfLines) {
             printf("There aren't that many lines! Try again. Number of lines: %d\n", numOfLines);
             free(up->userInput);
-            up->userInput = NULL;
+            up->userInput = nullptr;
             return;
         }
         int curLine = 1;
@@ -210,10 +203,10 @@ public:
         }
         printf("Enter what do you want to insert: ");
         up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
-        if (up->allInputs == NULL) {
+        if (up->allInputs == nullptr) {
             printf("There is no text to insert. Use Append Command!\n");
             free(up->userInput);
-            up->userInput = NULL;
+            up->userInput = nullptr;
             return;
         }
         getchar();
@@ -233,9 +226,9 @@ public:
         strcpy(up->allInputs, newBuffer);
         printf("Text was inserted.\n");
         free(newBuffer);
-        newBuffer = NULL;
+        newBuffer = nullptr;
         free(up->userInput);
-        up->userInput = NULL;
+        up->userInput = nullptr;
         up->isSaved = false;
     }
 
@@ -248,7 +241,7 @@ public:
             if (currentLine == line && currentIndex == index) {
                 break;
             }
-            if (destination != NULL) {
+            if (destination != nullptr) {
                 destination[j++] = source[i];
             }
             if (source[i] == '\n') {
@@ -270,7 +263,7 @@ public:
         char *deletedText = (char *) malloc((numSymbols + 1) * sizeof(char));
         int k = 0;
         while (numSymbols > 0 && up->allInputs[i] != '\0') {
-            if (deletedText != NULL) {
+            if (deletedText != nullptr) {
                 deletedText[k++] = up->allInputs[i];
             }
             i++;
@@ -284,7 +277,7 @@ public:
         up->allInputs = (char *) realloc(up->allInputs, (strlen(newBuffer) + 1) * sizeof(char));
         strcpy(up->allInputs, newBuffer);
         free(newBuffer);
-        newBuffer = NULL;
+        newBuffer = nullptr;
         up->isSaved = false;
         return deletedText;
     }
@@ -296,28 +289,29 @@ public:
         char *deletedText = DeleteText(up, line, index, numSymbols);
         printf("Text was deleted.\n");
         free(deletedText);
+        deletedText = nullptr;
     }
 
     void Undo(UserParams *up) {
-        if (up->undoFirst != NULL) {
-            if (up->redoThird != NULL) {
+        if (up->undoFirst != nullptr) {
+            if (up->redoThird != nullptr) {
                 free(up->redoThird);
             }
             up->redoThird = up->redoSecond;
             up->redoSecond = up->redoFirst;
-            if (up->allInputs != NULL) {
+            if (up->allInputs != nullptr) {
                 size_t len = strnlen(up->allInputs, up->bufferInput);
                 up->redoFirst = (char *) malloc((len + 1) * sizeof(char));
                 strncpy(up->redoFirst, up->allInputs, len);
                 up->redoFirst[len] = '\0';
             } else {
-                up->redoFirst = NULL;
+                up->redoFirst = nullptr;
             }
             free(up->allInputs);
             up->allInputs = up->undoFirst;
             up->undoFirst = up->undoSecond;
             up->undoSecond = up->undoThird;
-            up->undoThird = NULL;
+            up->undoThird = nullptr;
             printf("Undo completed.\n");
             up->isSaved = false;
         } else {
@@ -326,25 +320,25 @@ public:
     }
 
     void Redo(UserParams *up) {
-        if (up->redoFirst != NULL) {
-            if (up->undoThird != NULL) {
+        if (up->redoFirst != nullptr) {
+            if (up->undoThird != nullptr) {
                 free(up->undoThird);
             }
             up->undoThird = up->undoSecond;
             up->undoSecond = up->undoFirst;
-            if (up->allInputs != NULL) {
+            if (up->allInputs != nullptr) {
                 size_t len = strnlen(up->allInputs, up->bufferInput);
                 up->undoFirst = (char *) malloc((len + 1) * sizeof(char));
                 strncpy(up->undoFirst, up->allInputs, len);
                 up->undoFirst[len] = '\0';
             } else {
-                up->undoFirst = NULL;
+                up->undoFirst = nullptr;
             }
             free(up->allInputs);
             up->allInputs = up->redoFirst;
             up->redoFirst = up->redoSecond;
             up->redoSecond = up->redoThird;
-            up->redoThird = NULL;
+            up->redoThird = nullptr;
 
             printf("Redo completed.\n");
             up->isSaved = false;
@@ -355,7 +349,7 @@ public:
 
     void Cut(UserParams *up) {
         int line, index, numSymbols;
-        if (up->pasteBuffer != NULL) {
+        if (up->pasteBuffer != nullptr) {
             free(up->pasteBuffer);
         }
         printf("Choose line and index and number of symbols: ");
@@ -366,9 +360,8 @@ public:
     }
 
     void Copy(UserParams *up) {
-        SaveState(up);
         int line, index, numSymbols;
-        if (up->pasteBuffer != NULL) {
+        if (up->pasteBuffer != nullptr) {
             free(up->pasteBuffer);
         }
         printf("Choose line, index and number of symbols: ");
@@ -388,7 +381,7 @@ public:
         printf("Choose line and index: ");
         scanf("%d %d", &line, &index);
         getchar();
-        if (up->pasteBuffer == NULL) {
+        if (up->pasteBuffer == nullptr) {
             printf("There is nothing to paste!\n");
             return;
         }
@@ -399,7 +392,7 @@ public:
         while (up->pasteBuffer[i] != '\0') {
             Buffer[j++] = up->pasteBuffer[i++];
         }
-        int k = copyUntilIndex(up->allInputs, NULL, line, index);
+        int k = copyUntilIndex(up->allInputs, nullptr, line, index);
         while (up->allInputs[k] != '\0') {
             Buffer[j++] = up->allInputs[k++];
         }
@@ -409,6 +402,7 @@ public:
         strncpy(up->allInputs, Buffer, up->bufferInput);
         printf("Text was pasted.\n");
         free(Buffer);
+        Buffer = nullptr;
         up->isSaved = false;
     }
 
@@ -421,9 +415,13 @@ public:
         up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
         fgets(up->userInput, up->bufferInput, stdin);
         up->userInput[strcspn(up->userInput, "\n")] = '\0';
+        SaveState(up);
         int insertPos = copyUntilIndex(up->allInputs, NULL, line, index);
         int lengthDelete = 0;
         for (int i = insertPos; up->allInputs[i] != ' ' && up->allInputs[i] != '\0'; i++) {
+            if (up->allInputs[i] == '\n') {
+                break;
+            }
             lengthDelete++;
         }
         char *Buffer = (char *) malloc(
@@ -443,9 +441,9 @@ public:
 };
 
 class FileHandler {
-public:
     UserParams up;
 
+public:
     void SaveFile(UserParams *up) {
         FILE *file;
         if (up->allInputs == NULL) {
@@ -465,7 +463,7 @@ public:
         }
         fclose(file);
         free(up->userInput);
-        up->userInput = NULL;
+        up->userInput = nullptr;
     }
 
     void LoadFromFile(UserParams *up) {
@@ -511,16 +509,16 @@ public:
         }
         fclose(file);
         free(up->userInput);
-        up->userInput = NULL;
+        up->userInput = nullptr;
     }
 };
 
 class CommandsRunner {
-public:
     UserParams up;
     FileHandler files;
     TextEditor editor;
 
+public:
     enum Commands {
         COMMAND_HELP = 0,
         COMMAND_APPEND = 1,
@@ -614,7 +612,7 @@ public:
 int main() {
     UserParams up;
     CommandsRunner commands;
-    int command;
+    int command = 0;
     do {
         commands.CommandParser(&command);
         commands.CommandRunner(command, &up);
