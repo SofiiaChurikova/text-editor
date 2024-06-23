@@ -41,13 +41,49 @@ include CMakeFiles/rules.ninja
 
 cmake_ninja_workdir = /Users/macbook/Documents/text-editor/cmake-build-debug/
 # =============================================================================
+# Object build statements for SHARED_LIBRARY target caesar
+
+
+#############################################
+# Order-only phony target for caesar
+
+build cmake_object_order_depends_target_caesar: phony || CMakeFiles/caesar.dir
+
+build CMakeFiles/caesar.dir/caesar.cpp.o: CXX_COMPILER__caesar_unscanned_Debug /Users/macbook/Documents/text-editor/caesar.cpp || cmake_object_order_depends_target_caesar
+  DEFINES = -Dcaesar_EXPORTS
+  DEP_FILE = CMakeFiles/caesar.dir/caesar.cpp.o.d
+  FLAGS = -g -std=gnu++17 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.1.sdk -mmacosx-version-min=12.7 -fPIC -fcolor-diagnostics
+  OBJECT_DIR = CMakeFiles/caesar.dir
+  OBJECT_FILE_DIR = CMakeFiles/caesar.dir
+
+
+# =============================================================================
+# Link build statements for SHARED_LIBRARY target caesar
+
+
+#############################################
+# Link the shared library libcaesar.dylib
+
+build libcaesar.dylib: CXX_SHARED_LIBRARY_LINKER__caesar_Debug CMakeFiles/caesar.dir/caesar.cpp.o
+  ARCH_FLAGS = -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.1.sdk -mmacosx-version-min=12.7
+  INSTALLNAME_DIR = @rpath/
+  LANGUAGE_COMPILE_FLAGS = -g
+  OBJECT_DIR = CMakeFiles/caesar.dir
+  POST_BUILD = :
+  PRE_LINK = :
+  SONAME = libcaesar.dylib
+  SONAME_FLAG = -install_name
+  TARGET_FILE = libcaesar.dylib
+  TARGET_PDB = caesar.dylib.dbg
+
+# =============================================================================
 # Object build statements for EXECUTABLE target text-editor
 
 
 #############################################
 # Order-only phony target for text-editor
 
-build cmake_object_order_depends_target_text-editor: phony || CMakeFiles/text-editor.dir
+build cmake_object_order_depends_target_text-editor: phony || cmake_object_order_depends_target_caesar
 
 build CMakeFiles/text-editor.dir/main.cpp.o: CXX_COMPILER__text-editor_unscanned_Debug /Users/macbook/Documents/text-editor/main.cpp || cmake_object_order_depends_target_text-editor
   DEP_FILE = CMakeFiles/text-editor.dir/main.cpp.o.d
@@ -63,8 +99,9 @@ build CMakeFiles/text-editor.dir/main.cpp.o: CXX_COMPILER__text-editor_unscanned
 #############################################
 # Link the executable text-editor
 
-build text-editor: CXX_EXECUTABLE_LINKER__text-editor_Debug CMakeFiles/text-editor.dir/main.cpp.o
+build text-editor: CXX_EXECUTABLE_LINKER__text-editor_Debug CMakeFiles/text-editor.dir/main.cpp.o | libcaesar.dylib || libcaesar.dylib
   FLAGS = -g -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.1.sdk -mmacosx-version-min=12.7
+  LINK_LIBRARIES = -Wl,-rpath,/Users/macbook/Documents/text-editor/cmake-build-debug  libcaesar.dylib
   OBJECT_DIR = CMakeFiles/text-editor.dir
   POST_BUILD = :
   PRE_LINK = :
@@ -97,6 +134,8 @@ build rebuild_cache: phony CMakeFiles/rebuild_cache.util
 # =============================================================================
 # Target aliases.
 
+build caesar: phony libcaesar.dylib
+
 # =============================================================================
 # Folder targets.
 
@@ -105,7 +144,7 @@ build rebuild_cache: phony CMakeFiles/rebuild_cache.util
 #############################################
 # Folder: /Users/macbook/Documents/text-editor/cmake-build-debug
 
-build all: phony text-editor
+build all: phony libcaesar.dylib text-editor
 
 # =============================================================================
 # Built-in targets

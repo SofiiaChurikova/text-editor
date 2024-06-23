@@ -1,5 +1,9 @@
 #include <iostream>
 #include <cstdlib>
+#include <dlfcn.h>
+#include <cstring>
+
+using namespace std;
 
 class UserParams {
 public:
@@ -18,6 +22,89 @@ public:
     UserParams() {
         allInputs = (char *) malloc(1);
         allInputs[0] = '\0';
+    }
+
+    ~UserParams() {
+        FreeMemory();
+    }
+
+    void FreeMemory() {
+        free(userInput);
+        userInput = nullptr;
+        free(allInputs);
+        allInputs = nullptr;
+        free(undoFirst);
+        undoFirst = nullptr;
+        free(undoSecond);
+        undoSecond = nullptr;
+        free(undoThird);
+        undoThird = nullptr;
+        free(redoFirst);
+        redoFirst = nullptr;
+        free(redoSecond);
+        redoSecond = nullptr;
+        free(redoThird);
+        redoThird = nullptr;
+        free(pasteBuffer);
+        pasteBuffer = nullptr;
+    }
+};
+
+class CaesarCipher {
+private:
+    void *handle;
+
+    typedef char *(*encrypt_ptr)(char *, int);
+
+    typedef char *(*decrypt_ptr)(char *, int);
+
+    encrypt_ptr encrypt;
+    decrypt_ptr decrypt;
+
+    void closeLibrary() {
+        if (handle) {
+            dlclose(handle);
+            handle = nullptr;
+        }
+    }
+
+    bool loadLibrary() {
+        handle = dlopen("./libcaesar.dylib", RTLD_LAZY);
+        if (handle == nullptr) {
+            return false;
+        }
+        encrypt = (encrypt_ptr) dlsym(handle, "Encrypt");
+        decrypt = (decrypt_ptr) dlsym(handle, "Decrypt");
+        if (!encrypt || !decrypt) {
+            cout << "Proc failed or not found" << endl;
+            closeLibrary();
+            return false;
+        }
+        return true;
+    }
+
+public:
+    CaesarCipher() {
+        if (!loadLibrary()) {
+            closeLibrary();
+            cout << "Problems with your library!" << endl;
+        }
+    }
+
+    ~CaesarCipher() {
+        closeLibrary();
+    }
+
+    void Encrypt(char *Text, int key) {
+        char *encrypted = encrypt(Text, key);
+        strcpy(Text, encrypted);
+        free(encrypted);
+    }
+
+    void Decrypt(char *Text, int key) {
+        char *decrypted = decrypt(Text, key);
+        strcpy(Text, decrypted);
+        free(decrypted);
     }
 };
 
@@ -43,7 +130,9 @@ public:
             "13 - Copy \n"
             "14 - Paste \n"
             "15 - Insert with replacement \n"
-            "16 - Exit \n");
+            "16 - Encrypt \n"
+            "17 - Decrypt \n"
+            "18 - Exit \n");
     }
 
     void SaveState(UserParams *up) {
@@ -64,7 +153,6 @@ public:
         free(up->redoThird);
         up->redoThird = nullptr;
     }
-
 
     void AppendText(UserParams *up) {
         SaveState(up);
@@ -142,23 +230,25 @@ public:
         char *search = strstr(up->allInputs, up->userInput);
         if (search == nullptr) {
             printf("Text was not found.\n");
-        } else {
-            char *currentPosition = up->allInputs;
-            while (search != nullptr) {
-                while (currentPosition != search) {
-                    if (*currentPosition == '\n') {
-                        line++;
-                        charIndex = 1;
-                    } else {
-                        charIndex++;
-                    }
-                    currentPosition++;
-                }
-                printf("Text was found at: line %d, index %d\n", line, charIndex);
-                search = strstr(currentPosition + 1, up->userInput);
-            }
+            return;
         }
-        free(up->userInput);
+
+        char *currentPosition = up->allInputs;
+        while (search != nullptr) {
+            while (currentPosition != search) {
+                if (*currentPosition == '\n') {
+                    line++;
+                    charIndex = 1;
+                } else {
+                    charIndex++;
+                }
+                currentPosition++;
+            }
+            printf("Text was found at: line %d, index %d\n", line, charIndex);
+            search = strstr(currentPosition + 1, up->userInput);
+        }
+
+        free(up->userInput); // todo
         up->userInput = nullptr;
     }
 
@@ -197,8 +287,9 @@ public:
             }
         }
         if (index > numOfChars + 1) {
-            printf("There aren't that many positions to insert! Try again. Number of positions you can insert to: %d\n",
-                   numOfChars + 1);
+            printf(
+                "There aren't that many positions to insert! Try again. Number of positions you can insert to: %d\n",
+                numOfChars + 1);
             return;
         }
         printf("Enter what do you want to insert: ");
@@ -251,6 +342,9 @@ public:
                 currentIndex++;
             }
             i++;
+        }
+        if (destination != nullptr) {
+            destination[j] = '\0';
         }
         return i;
     }
@@ -536,13 +630,15 @@ public:
         COPY = 13,
         PASTE = 14,
         INSERT_WITH_REPLACEMENT = 15,
-        EXIT = 16
+        ENCRYPT = 16,
+        DECRYPT = 17,
+        EXIT = 18
     };
 
     static void CommandParser(int *command) {
         printf("Which command do you want to use? (0 - Help): ");
         while (scanf("%d", command) != 1 || *command < COMMAND_HELP || *command > EXIT) {
-            printf("Invalid input! Please enter a valid command (0 - 9): ");
+            printf("Invalid input! Please enter a valid command (0 - 18): ");
             while (getchar() != '\n');
         }
         while (getchar() != '\n');
@@ -598,27 +694,31 @@ public:
             case INSERT_WITH_REPLACEMENT:
                 editor.InsertWithReplacement(up);
                 break;
+            case ENCRYPT:
+                break;
+            case DECRYPT:
+                break;
             case EXIT:
                 editor.Clear(up);
-                printf("Thanks for using this program. Bye!");
-                break;;
+                printf("Thanks for using this program. Bye!\n");
+                break;
             default:
                 printf("Unknown command.\n");
                 break;
         }
     }
+
+    void Run() {
+        int command = 0;
+        do {
+            CommandParser(&command);
+            CommandRunner(command, &up);
+        } while (command != EXIT);
+    }
 };
 
 int main() {
-    UserParams up;
-    CommandsRunner commands;
-    int command = 0;
-    do {
-        commands.CommandParser(&command);
-        commands.CommandRunner(command, &up);
-    } while
-    (
-        command != commands.EXIT
-    );
+    CommandsRunner cmd;
+    cmd.Run();
     return 0;
 }

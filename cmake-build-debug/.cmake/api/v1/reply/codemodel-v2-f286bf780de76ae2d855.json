@@ -15,7 +15,8 @@
 					"source" : ".",
 					"targetIndexes" : 
 					[
-						0
+						0,
+						1
 					]
 				}
 			],
@@ -30,7 +31,8 @@
 					"name" : "text-editor",
 					"targetIndexes" : 
 					[
-						0
+						0,
+						1
 					]
 				}
 			],
@@ -38,8 +40,15 @@
 			[
 				{
 					"directoryIndex" : 0,
+					"id" : "caesar::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-caesar-Debug-21f6868ea748e4db4bf4.json",
+					"name" : "caesar",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
 					"id" : "text-editor::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-text-editor-Debug-177e08251626b343ff58.json",
+					"jsonFile" : "target-text-editor-Debug-f1ce39ede92760e5fb84.json",
 					"name" : "text-editor",
 					"projectIndex" : 0
 				}
