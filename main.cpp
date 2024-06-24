@@ -110,6 +110,7 @@ public:
 
 class TextEditor {
     UserParams up;
+    CaesarCipher cipher;
 
 public:
     void ProgramHelper() {
@@ -531,6 +532,29 @@ public:
         free(up->userInput);
         Buffer = NULL;
         up->userInput = NULL;
+        up->isSaved = false;
+    }
+
+    void EncryptText(UserParams *up) {
+        SaveState(up);
+        int key;
+        cout << "Enter the key for encryption: ";
+        cin >> key;
+        cin.ignore();
+        cipher.Encrypt(up->allInputs, key);
+        cout << "Text was encrypted." << endl;
+        up->isSaved = false;
+    }
+
+    void DecryptText(UserParams *up) {
+        SaveState(up);
+        int key;
+        cout << "Enter the key for decryption: ";
+        cin >> key;
+        cin.ignore();
+        cipher.Decrypt(up->allInputs, key);
+        cout << "Text was decrypted." << endl;
+        up->isSaved = false;
     }
 };
 
@@ -695,8 +719,10 @@ public:
                 editor.InsertWithReplacement(up);
                 break;
             case ENCRYPT:
+                editor.EncryptText(up);
                 break;
             case DECRYPT:
+                editor.DecryptText(up);
                 break;
             case EXIT:
                 editor.Clear(up);
