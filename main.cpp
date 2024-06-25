@@ -108,6 +108,7 @@ public:
     }
 };
 
+
 class TextEditor {
     UserParams up;
     CaesarCipher cipher;
@@ -133,7 +134,9 @@ public:
             "15 - Insert with replacement \n"
             "16 - Encrypt \n"
             "17 - Decrypt \n"
-            "18 - Exit \n");
+            "18 - Encrypt file \n"
+            "19 - Decrypt file \n"
+            "20 - Exit \n");
     }
 
     void SaveState(UserParams *up) {
@@ -559,34 +562,54 @@ public:
 };
 
 class FileHandler {
+    CaesarCipher cipher;
     UserParams up;
 
-public:
-    void SaveFile(UserParams *up) {
-        FILE *file;
-        if (up->allInputs == NULL) {
-            printf("There is no text to save!\n");
-            return;
+private:
+    bool BasicLoadFile(UserParams *up, const char *filePath) {
+        FILE *file = fopen(filePath, "r");
+        if (file == nullptr) {
+            printf("Error opening file %s for reading.\n", filePath);
+            return false;
         }
-        printf("Enter a title for file: ");
-        up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
-        scanf("%s", up->userInput);
-        file = fopen(up->userInput, "w");
-        if (file != NULL) {
-            fputs(up->allInputs, file);
-            printf("File created and text saved!\n");
-            up->isSaved = true;
+        fseek(file, 0, SEEK_END);
+        long fileSize = ftell(file);
+        rewind(file);
+        if (up->allInputs != nullptr) {
+            free(up->allInputs);
+            up->allInputs = nullptr;
+        }
+
+        up->userInput = (char *) realloc(up->userInput, (fileSize + 1) * sizeof(char));
+        if (fread(up->userInput, sizeof(char), fileSize, file) == fileSize) {
+            up->userInput[fileSize] = '\0';
+            up->allInputs = (char *) malloc((fileSize + 1) * sizeof(char));
+            strcpy(up->allInputs, up->userInput);
+
+            fclose(file);
+            return true;
         } else {
-            printf("Error opening file.\n");
+            printf("Error reading file %s.\n", filePath);
+            fclose(file);
+            return false;
         }
-        fclose(file);
-        free(up->userInput);
-        up->userInput = nullptr;
     }
 
-    void LoadFromFile(UserParams *up) {
-        FILE *file;
-        if (!up->isSaved && up->allInputs != NULL) {
+    bool BasicSaveFile(UserParams *up, const char *filePath) {
+        FILE *file = fopen(filePath, "w");
+        if (file == nullptr) {
+            printf("Error opening file %s for writing.\n", filePath);
+            return false;
+        }
+        if (up->allInputs != nullptr) {
+            fputs(up->allInputs, file);
+        }
+        fclose(file);
+        return true;
+    }
+
+    bool CheckUnsavedChanges(UserParams *up) {
+        if (!up->isSaved && up->allInputs != nullptr) {
             char dataAnswer[20];
             while (true) {
                 printf("Do you really want to load a new file? (Yes/No) You have unsaved text: ");
@@ -596,38 +619,99 @@ public:
                 }
                 if (strcmp(dataAnswer, "yes") == 0) {
                     free(up->allInputs);
-                    up->allInputs = NULL;
-                    break;
+                    up->allInputs = nullptr;
+                    return true;
                 } else {
-                    return;
+                    return false;
                 }
             }
+        }
+        return true;
+    }
+
+public:
+    void SaveFile(UserParams *up) {
+        if (up->allInputs == nullptr) {
+            printf("There is no text to save!\n");
+            return;
+        }
+        printf("Enter a title for file: ");
+        up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
+        scanf("%s", up->userInput);
+
+        if (BasicSaveFile(up, up->userInput)) {
+            printf("File created and text saved!\n");
+            up->isSaved = true;
+        }
+
+        free(up->userInput);
+        up->userInput = nullptr;
+    }
+
+    void LoadFromFile(UserParams *up) {
+        if (!CheckUnsavedChanges(up)) {
+            return;
         }
         printf("Enter a file that you want to load info from: ");
         char fileInput[256];
         scanf("%s", fileInput);
-        file = fopen(fileInput, "r");
-        if (file == NULL) {
-            printf("Error opening file.\n");
-            fclose(file);
+
+        if (BasicLoadFile(up, fileInput)) {
+            printf("File content loaded.\n");
+            up->isSaved = false;
+        }
+    }
+
+    void EncryptFile(UserParams *up) {
+        if (!CheckUnsavedChanges(up)) {
             return;
         }
-        fseek(file, 0, SEEK_END);
-        long fileSize = ftell(file);
-        rewind(file);
-        up->userInput = (char *) realloc(up->userInput, (fileSize + 1) * sizeof(char));
-        if (fread(up->userInput, sizeof(char), fileSize, file) == fileSize) {
-            up->userInput[fileSize] = '\0';
-            up->allInputs = (char *) realloc(up->allInputs, (fileSize + 1) * sizeof(char));
-            strcat(up->allInputs, up->userInput);
-            printf("File content loaded.\n");
-            up->isSaved = true;
-        } else {
-            printf("Error reading file.\n");
+        char inputFile[256];
+        char outputFile[256];
+        cout << "Enter input file path: ";
+        cin >> inputFile;
+        cin.ignore();
+        cout << "Enter output file path: ";
+        cin >> outputFile;
+        cin.ignore();
+        int key;
+        cout << "Enter the key for encryption: ";
+        cin >> key;
+        cin.ignore();
+
+        if (BasicLoadFile(up, inputFile)) {
+            cipher.Encrypt(up->allInputs, key);
+            if (BasicSaveFile(up, outputFile)) {
+                cout << "File encrypted and saved as " << outputFile << endl;
+                up->isSaved = false;
+            }
         }
-        fclose(file);
-        free(up->userInput);
-        up->userInput = nullptr;
+    }
+
+    void DecryptFile(UserParams *up) {
+        if (!CheckUnsavedChanges(up)) {
+            return;
+        }
+        char inputFile[256];
+        char outputFile[256];
+        cout << "Enter input file path: ";
+        cin >> inputFile;
+        cin.ignore();
+        cout << "Enter output file path: ";
+        cin >> outputFile;
+        cin.ignore();
+        int key;
+        cout << "Enter the key for decryption: ";
+        cin >> key;
+        cin.ignore();
+
+        if (BasicLoadFile(up, inputFile)) {
+            cipher.Decrypt(up->allInputs, key);
+            if (BasicSaveFile(up, outputFile)) {
+                cout << "File decrypted and saved as " << outputFile << endl;
+                up->isSaved = false;
+            }
+        }
     }
 };
 
@@ -656,7 +740,9 @@ public:
         INSERT_WITH_REPLACEMENT = 15,
         ENCRYPT = 16,
         DECRYPT = 17,
-        EXIT = 18
+        ENCRYPT_FILE = 18,
+        DECRYPT_FILE = 19,
+        EXIT = 20
     };
 
     static void CommandParser(int *command) {
@@ -723,6 +809,12 @@ public:
                 break;
             case DECRYPT:
                 editor.DecryptText(up);
+                break;
+            case ENCRYPT_FILE:
+                files.EncryptFile(up);
+                break;
+            case DECRYPT_FILE:
+                files.DecryptFile(up);
                 break;
             case EXIT:
                 editor.Clear(up);
