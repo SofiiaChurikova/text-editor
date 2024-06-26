@@ -562,52 +562,9 @@ public:
 };
 
 class FileHandler {
-    CaesarCipher cipher;
     UserParams up;
 
 private:
-    bool BasicLoadFile(UserParams *up, const char *filePath) {
-        FILE *file = fopen(filePath, "r");
-        if (file == nullptr) {
-            printf("Error opening file %s for reading.\n", filePath);
-            return false;
-        }
-        fseek(file, 0, SEEK_END);
-        long fileSize = ftell(file);
-        rewind(file);
-        if (up->allInputs != nullptr) {
-            free(up->allInputs);
-            up->allInputs = nullptr;
-        }
-
-        up->userInput = (char *) realloc(up->userInput, (fileSize + 1) * sizeof(char));
-        if (fread(up->userInput, sizeof(char), fileSize, file) == fileSize) {
-            up->userInput[fileSize] = '\0';
-            up->allInputs = (char *) malloc((fileSize + 1) * sizeof(char));
-            strcpy(up->allInputs, up->userInput);
-
-            fclose(file);
-            return true;
-        } else {
-            printf("Error reading file %s.\n", filePath);
-            fclose(file);
-            return false;
-        }
-    }
-
-    bool BasicSaveFile(UserParams *up, const char *filePath) {
-        FILE *file = fopen(filePath, "w");
-        if (file == nullptr) {
-            printf("Error opening file %s for writing.\n", filePath);
-            return false;
-        }
-        if (up->allInputs != nullptr) {
-            fputs(up->allInputs, file);
-        }
-        fclose(file);
-        return true;
-    }
-
     bool CheckUnsavedChanges(UserParams *up) {
         if (!up->isSaved && up->allInputs != nullptr) {
             char dataAnswer[20];
@@ -639,10 +596,19 @@ public:
         up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
         scanf("%s", up->userInput);
 
-        if (BasicSaveFile(up, up->userInput)) {
-            printf("File created and text saved!\n");
-            up->isSaved = true;
+        FILE *file = fopen(up->userInput, "w");
+        if (file == nullptr) {
+            printf("Error opening file %s for writing.\n", up->userInput);
+            free(up->userInput);
+            up->userInput = nullptr;
+            return;
         }
+        if (up->allInputs != nullptr) {
+            fputs(up->allInputs, file);
+        }
+        fclose(file);
+        printf("File created and text saved!\n");
+        up->isSaved = true;
 
         free(up->userInput);
         up->userInput = nullptr;
@@ -656,16 +622,78 @@ public:
         char fileInput[256];
         scanf("%s", fileInput);
 
-        if (BasicLoadFile(up, fileInput)) {
-            printf("File content loaded.\n");
-            up->isSaved = false;
-        }
-    }
-
-    void EncryptFile(UserParams *up) {
-        if (!CheckUnsavedChanges(up)) {
+        FILE *file = fopen(fileInput, "r");
+        if (file == nullptr) {
+            printf("Error opening file %s for reading.\n", fileInput);
             return;
         }
+        fseek(file, 0, SEEK_END);
+        long fileSize = ftell(file);
+        rewind(file);
+        if (up->allInputs != nullptr) {
+            free(up->allInputs);
+            up->allInputs = nullptr;
+        }
+
+        up->userInput = (char *) realloc(up->userInput, (fileSize + 1) * sizeof(char));
+        if (fread(up->userInput, sizeof(char), fileSize, file) == fileSize) {
+            up->userInput[fileSize] = '\0';
+            up->allInputs = (char *) malloc((fileSize + 1) * sizeof(char));
+            strcpy(up->allInputs, up->userInput);
+
+            fclose(file);
+            printf("File content loaded.\n");
+            up->isSaved = false;
+        } else {
+            printf("Error reading file %s.\n", fileInput);
+            fclose(file);
+        }
+    }
+};
+
+class CaesarFiles {
+    CaesarCipher cipher;
+    struct FileData {
+        char* content;
+        long size;
+    };
+
+private:
+    FileData LoadFileInfo(char *filePath) {
+        FILE *file = fopen(filePath, "r");
+        if (file == nullptr) {
+            cout << "Error opening file" << filePath << endl;
+            return {nullptr, 0};
+        }
+        fseek(file, 0, SEEK_END);
+        long fileSize = ftell(file);
+        rewind(file);
+        char *fileInfo = (char *) malloc((fileSize + 1) * sizeof(char));
+        if (fread(fileInfo, sizeof(char), fileSize, file) == fileSize) {
+            fileInfo[fileSize] = '\0';
+            fclose(file);
+            return {fileInfo, fileSize};
+        } else {
+            cout << "Error reading file" << filePath << endl;
+            fclose(file);
+            free(fileInfo);
+            fileInfo = nullptr;
+            return {nullptr, 0};
+        }
+    }
+    bool SaveFileInfo(char* filePath, char* content) {
+        FILE *file = fopen(filePath, "w");
+        if (file == nullptr) {
+            cout << "Error opening file" << filePath << endl;
+            return false;
+        }
+        fputs(content, file);
+        fclose(file);
+        return true;
+    }
+
+public:
+    void EncryptFile() {
         char inputFile[256];
         char outputFile[256];
         cout << "Enter input file path: ";
@@ -678,20 +706,21 @@ public:
         cout << "Enter the key for encryption: ";
         cin >> key;
         cin.ignore();
-
-        if (BasicLoadFile(up, inputFile)) {
-            cipher.Encrypt(up->allInputs, key);
-            if (BasicSaveFile(up, outputFile)) {
-                cout << "File encrypted and saved as " << outputFile << endl;
-                up->isSaved = false;
+        FileData fileText = LoadFileInfo(inputFile);
+        if (fileText.content != nullptr) {
+            char *encrypted = (char *) malloc((fileText.size + 1) * sizeof(char));
+            strncpy(encrypted, fileText.content, fileText.size);
+            cipher.Encrypt(encrypted, key);
+            if (SaveFileInfo(outputFile, encrypted)) {
+                cout << "File encrypted and saved as" << outputFile << endl;
             }
+            free(fileText.content);
+            free(encrypted);
+            encrypted = nullptr;
         }
     }
 
-    void DecryptFile(UserParams *up) {
-        if (!CheckUnsavedChanges(up)) {
-            return;
-        }
+    void DecryptFile() {
         char inputFile[256];
         char outputFile[256];
         cout << "Enter input file path: ";
@@ -704,13 +733,17 @@ public:
         cout << "Enter the key for decryption: ";
         cin >> key;
         cin.ignore();
-
-        if (BasicLoadFile(up, inputFile)) {
-            cipher.Decrypt(up->allInputs, key);
-            if (BasicSaveFile(up, outputFile)) {
-                cout << "File decrypted and saved as " << outputFile << endl;
-                up->isSaved = false;
+        FileData fileText = LoadFileInfo(inputFile);
+        if (fileText.content != nullptr) {
+            char *decrypted = (char *) malloc((fileText.size + 1) * sizeof(char));
+            strncpy(decrypted, fileText.content, fileText.size);
+            cipher.Decrypt(decrypted, key);
+            if (SaveFileInfo(outputFile, decrypted)) {
+                cout << "File encrypted and saved as" << outputFile << endl;
             }
+            free(fileText.content);
+            free(decrypted);
+            decrypted = nullptr;
         }
     }
 };
@@ -719,6 +752,7 @@ class CommandsRunner {
     UserParams up;
     FileHandler files;
     TextEditor editor;
+    CaesarFiles cipherFile;
 
 public:
     enum Commands {
@@ -811,10 +845,10 @@ public:
                 editor.DecryptText(up);
                 break;
             case ENCRYPT_FILE:
-                files.EncryptFile(up);
+                cipherFile.EncryptFile();
                 break;
             case DECRYPT_FILE:
-                files.DecryptFile(up);
+                cipherFile.DecryptFile();
                 break;
             case EXIT:
                 editor.Clear(up);
