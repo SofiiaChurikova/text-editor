@@ -18,6 +18,7 @@ public:
     char *redoSecond = nullptr;
     char *redoThird = nullptr;
     char *pasteBuffer = nullptr;
+    char *processed = nullptr;
 
     UserParams() {
         allInputs = (char *) malloc(1);
@@ -47,6 +48,8 @@ public:
         redoThird = nullptr;
         free(pasteBuffer);
         pasteBuffer = nullptr;
+        free(processed);
+        processed = nullptr;
     }
 };
 
@@ -105,6 +108,20 @@ public:
         char *decrypted = decrypt(Text, key);
         strcpy(Text, decrypted);
         free(decrypted);
+    }
+
+    void EncryptChunk(char *Text, int key) {
+        char *encrypted = encrypt(Text, key);
+        strncpy(Text, encrypted, 128);
+        free(encrypted);
+        encrypted = nullptr;
+    }
+
+    void DecryptChunk(char *Text, int key) {
+        char *decrypted = decrypt(Text, key);
+        strncpy(Text, decrypted, 128);
+        free(decrypted);
+        decrypted = nullptr;
     }
 };
 
@@ -653,47 +670,115 @@ public:
 
 class CaesarFiles {
     CaesarCipher cipher;
-    struct FileData {
-        char* content;
+    UserParams up;
+
+    class FileData {
+    private:
+        char *content;
         long size;
+
+    public:
+        FileData(char *content = nullptr, long size = 0) : content(content), size(size) {
+        }
+
+        ~FileData() {
+            if (content) {
+                free(content);
+                content = nullptr;
+            }
+        }
+
+        char *getContent() const { return content; }
+        long getSize() const { return size; }
     };
 
 private:
-    FileData LoadFileInfo(char *filePath) {
-        FILE *file = fopen(filePath, "r");
-        if (file == nullptr) {
-            cout << "Error opening file" << filePath << endl;
-            return {nullptr, 0};
+    FileData LoadFileInfo(const char *filePath) {
+        FILE *file = fopen(filePath, "rb");
+        if (!file) {
+            cout << "Error opening file " << filePath << endl;
+            return FileData();
         }
+
         fseek(file, 0, SEEK_END);
         long fileSize = ftell(file);
         rewind(file);
-        char *fileInfo = (char *) malloc((fileSize + 1) * sizeof(char));
-        if (fread(fileInfo, sizeof(char), fileSize, file) == fileSize) {
-            fileInfo[fileSize] = '\0';
+
+        char *fileContent = (char *) malloc(fileSize + 1);
+        if (fread(fileContent, 1, fileSize, file) != fileSize) {
+            cout << "Error reading file " << filePath << endl;
             fclose(file);
-            return {fileInfo, fileSize};
-        } else {
-            cout << "Error reading file" << filePath << endl;
-            fclose(file);
-            free(fileInfo);
-            fileInfo = nullptr;
-            return {nullptr, 0};
+            free(fileContent);
+            fileContent = nullptr;
+            return FileData();
         }
+
+        fileContent[fileSize] = '\0';
+        fclose(file);
+        return FileData(fileContent, fileSize);
     }
-    bool SaveFileInfo(char* filePath, char* content) {
-        FILE *file = fopen(filePath, "w");
-        if (file == nullptr) {
-            cout << "Error opening file" << filePath << endl;
+
+    bool SaveFileInfo(char *filePath, char *content, long size) {
+        FILE *file = fopen(filePath, "wb");
+        if (!file) {
+            cout << "Error opening file " << filePath << endl;
             return false;
         }
-        fputs(content, file);
+
+        if (fwrite(content, 1, size, file) != size) {
+            cout << "Error writing to file " << filePath << endl;
+            fclose(file);
+            return false;
+        }
+
         fclose(file);
         return true;
     }
 
+    void ProcessFile(UserParams *up, char *inputFilePath, char *outputFilePath, int key, bool encrypt) {
+        FileData fileText = LoadFileInfo(inputFilePath);
+        if (fileText.getContent() != nullptr) {
+            long fileSize = fileText.getSize();
+            long textSize = 0;
+            up->processed = (char *) malloc((fileSize + 1) * sizeof(char));
+
+            while (textSize < fileSize) {
+                long remainingSize = fileSize - textSize;
+                long chunkSize;
+                if (remainingSize > 128) {
+                    chunkSize = 128;
+                } else {
+                    chunkSize = remainingSize;
+                }
+                char buffer[128];
+                memcpy(buffer, fileText.getContent() + textSize, chunkSize);
+                cout << "Processing chunk of size: " << chunkSize << " at: " << textSize << endl;
+
+                if (encrypt) {
+                    cipher.EncryptChunk(buffer, key);
+                } else {
+                    cipher.DecryptChunk(buffer, key);
+                }
+
+                memcpy(up->processed + textSize, buffer, chunkSize);
+                textSize += chunkSize;
+            }
+
+            if (SaveFileInfo(outputFilePath, up->processed, fileSize)) {
+                if (encrypt) {
+                    cout << "File encrypted and saved as " << outputFilePath << endl;
+                } else {
+                    cout << "File decrypted and saved as " << outputFilePath << endl;
+                }
+            }
+
+            free(up->processed);
+            up->processed = nullptr;
+        }
+    }
+
 public:
-    void EncryptFile() {
+    void EncryptFile(UserParams *up) {
         char inputFile[256];
         char outputFile[256];
         cout << "Enter input file path: ";
@@ -706,21 +791,11 @@ public:
         cout << "Enter the key for encryption: ";
         cin >> key;
         cin.ignore();
-        FileData fileText = LoadFileInfo(inputFile);
-        if (fileText.content != nullptr) {
-            char *encrypted = (char *) malloc((fileText.size + 1) * sizeof(char));
-            strncpy(encrypted, fileText.content, fileText.size);
-            cipher.Encrypt(encrypted, key);
-            if (SaveFileInfo(outputFile, encrypted)) {
-                cout << "File encrypted and saved as" << outputFile << endl;
-            }
-            free(fileText.content);
-            free(encrypted);
-            encrypted = nullptr;
-        }
+
+        ProcessFile(up, inputFile, outputFile, key, true);
     }
 
-    void DecryptFile() {
+    void DecryptFile(UserParams *up) {
         char inputFile[256];
         char outputFile[256];
         cout << "Enter input file path: ";
@@ -733,20 +808,11 @@ public:
         cout << "Enter the key for decryption: ";
         cin >> key;
         cin.ignore();
-        FileData fileText = LoadFileInfo(inputFile);
-        if (fileText.content != nullptr) {
-            char *decrypted = (char *) malloc((fileText.size + 1) * sizeof(char));
-            strncpy(decrypted, fileText.content, fileText.size);
-            cipher.Decrypt(decrypted, key);
-            if (SaveFileInfo(outputFile, decrypted)) {
-                cout << "File encrypted and saved as" << outputFile << endl;
-            }
-            free(fileText.content);
-            free(decrypted);
-            decrypted = nullptr;
-        }
+
+        ProcessFile(up, inputFile, outputFile, key, false);
     }
 };
+
 
 class CommandsRunner {
     UserParams up;
@@ -845,10 +911,10 @@ public:
                 editor.DecryptText(up);
                 break;
             case ENCRYPT_FILE:
-                cipherFile.EncryptFile();
+                cipherFile.EncryptFile(up);
                 break;
             case DECRYPT_FILE:
-                cipherFile.DecryptFile();
+                cipherFile.DecryptFile(up);
                 break;
             case EXIT:
                 editor.Clear(up);
