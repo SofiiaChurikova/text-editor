@@ -1,5 +1,5 @@
 # Text-editor as first assignment at Programming Paradigms
-In overall program has 17 commands:
+In overall program has 21 commands:
 1. Help
 2. Append text
 3. Start the new line
@@ -16,7 +16,11 @@ In overall program has 17 commands:
 14. Copy
 15. Paste
 16. Insert with replacement
-17. Exit
+17. Encrypt text
+18. Decrypt text
+19. Encrypt file
+20. Decrypt file
+21. Exit
 
 ## Commands information
 
@@ -220,5 +224,100 @@ Clear console and exit
 
 ![Снимок экрана 2024-06-11 в 3 14 24 AM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/069c9678-063b-4fb4-afdd-00bb78e09f00)
 
+
+## Commands usage tests 4 TASK
+
+### 17. Encrypt text
+
+![Снимок экрана 2024-06-27 в 11 28 15 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/ab5741ba-e095-4f3c-aea3-3170604162ab)
+
+
+### 18. Decrypt text
+
+![Снимок экрана 2024-06-27 в 11 28 48 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/d60aefb9-04c2-46e3-a674-282dbfc72706)
+
+
+### 19. Encrypt file
+At first, have file:
+
+![Снимок экрана 2024-06-27 в 11 30 08 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/ea2d6d5b-00bc-40da-ad60-52a926ab8990)
+
+
+![Снимок экрана 2024-06-27 в 11 30 53 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/2704616f-3a5a-4c4c-89a8-921c4a58e23d)
+
+Now file looks:
+
+![Снимок экрана 2024-06-27 в 11 31 19 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/b80838fd-11bc-4beb-88b1-be686d2df4f2)
+
+
+### 20. Decrypt file
+Have file from the previous point:
+
+![Снимок экрана 2024-06-27 в 11 31 19 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/b80838fd-11bc-4beb-88b1-be686d2df4f2)
+
+
+![Снимок экрана 2024-06-27 в 11 32 36 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/7bda72a8-281b-434f-81f7-ccca1184f322)
+
+
+Now file looks:
+
+![Снимок экрана 2024-06-27 в 11 32 52 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/f10b03f5-3d65-47a9-aa10-96ed6a28b9be)
+
+
+
+### 1. 
+- Append text
+- New line
+- Append text
+- Encrypt (key = 1)
+- Undo
+- Insert with replacent
+- Encrypt
+- Decrypt (key = 1)
+
+![Снимок экрана 2024-06-27 в 11 38 56 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/96cc2266-817d-4691-80d0-e5165d198f1b)
+
+![Снимок экрана 2024-06-27 в 11 39 07 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/d88f01cd-1e08-4263-a152-37b3f8285917)
+
+
+### 2. 
+- Append text
+- Encrypt
+- New line
+- Append text
+- Cut (encrypted)
+- Encrypt (remaining text)
+- Paste at the same place encrypted one
+- Decrypt all text
+
+![Снимок экрана 2024-06-27 в 11 48 45 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/0064fa17-391d-432d-9126-9522374213fb)
+
+![Снимок экрана 2024-06-27 в 11 49 01 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/109191eb-8798-45de-bc9d-4863bc30e3ed)
+
+
+### 3. 
+big.txt file (6.5mb):
+
+![Снимок экрана 2024-06-27 в 11 50 16 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/0aa10d11-090a-4b87-bb55-abd7a2bb651d)
+
+end.txt file (empty)
+
+![Снимок экрана 2024-06-27 в 11 51 04 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/b22f8557-60d6-4510-8396-bc8b2aff1af1)
+
+- Encrypt big.txt file to end.txt file
+
+![Снимок экрана 2024-06-27 в 11 52 54 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/955e9239-e1c5-4c22-8804-883bc77878b3)
+
+Now end.txt looks like:
+
+![Снимок экрана 2024-06-27 в 11 53 23 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/c3a533ee-6190-4d2c-9042-c710cd9e5a7a)
+
+- Decrypt end.txt to initial view
+
+![Снимок экрана 2024-06-27 в 11 54 21 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/18f70288-7c84-475d-afd0-f3b9b812ecd9)
+
+And end.txt looks:
+
+![Снимок экрана 2024-06-27 в 11 54 42 PM](https://github.com/SofiiaChurikova/text-editor/assets/150338552/31efcc60-b47c-4392-91d5-5b7b56cfcea1)
 
 
