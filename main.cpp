@@ -102,12 +102,14 @@ public:
         char *encrypted = encrypt(Text, key);
         strcpy(Text, encrypted);
         free(encrypted);
+        encrypted = nullptr;
     }
 
     void Decrypt(char *Text, int key) {
         char *decrypted = decrypt(Text, key);
         strcpy(Text, decrypted);
         free(decrypted);
+        decrypted = nullptr;
     }
 
     void EncryptChunk(char *Text, int key) {
@@ -343,7 +345,6 @@ public:
         up->userInput = nullptr;
         up->isSaved = false;
     }
-
     int copyUntilIndex(char *source, char *destination, int line, int index) {
         int currentLine = 1;
         int currentIndex = 1;
@@ -675,10 +676,10 @@ class CaesarFiles {
     class FileData {
     private:
         char *content;
-        long size;
+        int size;
 
     public:
-        FileData(char *content = nullptr, long size = 0) : content(content), size(size) {
+        FileData(char *content = nullptr, int size = 0) : content(content), size(size) {
         }
 
         ~FileData() {
@@ -688,12 +689,12 @@ class CaesarFiles {
             }
         }
 
-        char *getContent() const { return content; }
-        long getSize() const { return size; }
+        char *getContent() { return content; }
+        int getSize() { return size; }
     };
 
 private:
-    FileData LoadFileInfo(const char *filePath) {
+    FileData LoadFileInfo(char *filePath) {
         FILE *file = fopen(filePath, "rb");
         if (!file) {
             cout << "Error opening file " << filePath << endl;
@@ -701,7 +702,7 @@ private:
         }
 
         fseek(file, 0, SEEK_END);
-        long fileSize = ftell(file);
+        int fileSize = ftell(file);
         rewind(file);
 
         char *fileContent = (char *) malloc(fileSize + 1);
@@ -738,13 +739,13 @@ private:
     void ProcessFile(UserParams *up, char *inputFilePath, char *outputFilePath, int key, bool encrypt) {
         FileData fileText = LoadFileInfo(inputFilePath);
         if (fileText.getContent() != nullptr) {
-            long fileSize = fileText.getSize();
-            long textSize = 0;
+            int fileSize = fileText.getSize();
+            int textSize = 0;
             up->processed = (char *) malloc((fileSize + 1) * sizeof(char));
 
             while (textSize < fileSize) {
-                long remainingSize = fileSize - textSize;
-                long chunkSize;
+                int remainingSize = fileSize - textSize;
+                int chunkSize;
                 if (remainingSize > 128) {
                     chunkSize = 128;
                 } else {
@@ -848,7 +849,7 @@ public:
     static void CommandParser(int *command) {
         printf("Which command do you want to use? (0 - Help): ");
         while (scanf("%d", command) != 1 || *command < COMMAND_HELP || *command > EXIT) {
-            printf("Invalid input! Please enter a valid command (0 - 18): ");
+            printf("Invalid input! Please enter a valid command (0 - 20): ");
             while (getchar() != '\n');
         }
         while (getchar() != '\n');
