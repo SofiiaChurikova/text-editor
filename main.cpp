@@ -132,32 +132,7 @@ class TextEditor {
     UserParams up;
     CaesarCipher cipher;
 
-public:
-    void ProgramHelper() {
-        printf("Hello! This is a Simple Text Editor. You can use these commands: \n"
-            "0 - Help \n"
-            "1 - Append text \n"
-            "2 - Start the new line \n"
-            "3 - Load the information from the file \n"
-            "4 - Save the information to the file \n"
-            "5 - Print the text \n"
-            "6 - Insert the text by line and symbol \n"
-            "7 - Search the text \n"
-            "8 - Clear the console \n"
-            "9 - Delete number of symbols by line and index \n"
-            "10 - Undo \n"
-            "11 - Redo \n"
-            "12 - Cut \n"
-            "13 - Copy \n"
-            "14 - Paste \n"
-            "15 - Insert with replacement \n"
-            "16 - Encrypt \n"
-            "17 - Decrypt \n"
-            "18 - Encrypt file \n"
-            "19 - Decrypt file \n"
-            "20 - Exit \n");
-    }
-
+private:
     void SaveState(UserParams *up) {
         free(up->undoThird);
         up->undoThird = up->undoSecond;
@@ -177,174 +152,6 @@ public:
         up->redoThird = nullptr;
     }
 
-    void AppendText(UserParams *up) {
-        SaveState(up);
-        up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
-        printf("Enter a string that you want append: ");
-        size_t len = 0;
-        int i;
-        while ((i = getchar()) != '\n') {
-            if (len + 1 >= up->bufferInput) {
-                up->bufferInput += 256;
-                up->userInput = (char *) realloc(up->userInput, (up->bufferInput) * sizeof(char));
-            }
-            up->userInput[len++] = i;
-        }
-        up->userInput[len] = '\0';
-        if (up->allInputs == nullptr) {
-            up->allInputs = (char *) malloc((strlen(up->userInput) + 1) * sizeof(char));
-            strcpy(up->allInputs, up->userInput);
-        } else {
-            up->allInputs = (char *) realloc(up->allInputs,
-                                             (strlen(up->userInput) + strlen(up->allInputs) + 1) * sizeof(char));
-            strcat(up->allInputs, up->userInput);
-        }
-        printf("Text was appended.\n");
-        free(up->userInput);
-        up->userInput = nullptr;
-        up->isSaved = false;
-    }
-
-    void NewLine(UserParams *up) {
-        SaveState(up);
-        if (up->allInputs == nullptr) {
-            up->allInputs = (char *) malloc(2 * sizeof(char));
-            strcpy(up->allInputs, "\n");
-        } else {
-            up->allInputs = (char *) realloc(up->allInputs, (strlen(up->allInputs) + 2) * sizeof(char));
-            strcat(up->allInputs, "\n");
-        }
-        printf("New line was started.\n");
-        up->isSaved = false;
-    }
-
-    void PrintText(UserParams *up) {
-        if (up->allInputs == nullptr) {
-            printf("There is no text to print!\n");
-        } else {
-            printf("%s", up->allInputs);
-            printf("\n");
-        }
-    }
-
-    void Clear(UserParams *up) {
-        SaveState(up);
-        if (up->allInputs == nullptr) {
-            printf("Console is empty.\n");
-            return;
-        } else {
-            free(up->allInputs);
-            up->allInputs = nullptr;
-            printf("Console was cleared.\n");
-            up->isSaved = false;
-        }
-    }
-
-    void SearchText(UserParams *up) {
-        int line = 1;
-        int charIndex = 1;
-        if (up->allInputs == nullptr) {
-            printf("There is no text to search!\n");
-            return;
-        }
-        printf("Enter text to search: ");
-        up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
-        scanf("%s", up->userInput);
-        char *search = strstr(up->allInputs, up->userInput);
-        if (search == nullptr) {
-            printf("Text was not found.\n");
-            return;
-        }
-
-        char *currentPosition = up->allInputs;
-        while (search != nullptr) {
-            while (currentPosition != search) {
-                if (*currentPosition == '\n') {
-                    line++;
-                    charIndex = 1;
-                } else {
-                    charIndex++;
-                }
-                currentPosition++;
-            }
-            printf("Text was found at: line %d, index %d\n", line, charIndex);
-            search = strstr(currentPosition + 1, up->userInput);
-        }
-
-        free(up->userInput); // todo
-        up->userInput = nullptr;
-    }
-
-    void InsertByIndex(UserParams *up) {
-        SaveState(up);
-        int line;
-        int index;
-        int numOfLines = 0;
-        printf("Choose line and index: ");
-        scanf("%d %d", &line, &index);
-        if (up->allInputs[0] != '\0') {
-            numOfLines = 1;
-        }
-        for (int l = 0; up->allInputs[l] != '\0'; l++) {
-            if (up->allInputs[l] == '\n') {
-                numOfLines++;
-            }
-        }
-        if (line > numOfLines) {
-            printf("There aren't that many lines! Try again. Number of lines: %d\n", numOfLines);
-            free(up->userInput);
-            up->userInput = nullptr;
-            return;
-        }
-        int curLine = 1;
-        int numOfChars = 0;
-        for (int c = 0; up->allInputs[c] != '\0'; c++) {
-            if (curLine == line) {
-                if (up->allInputs[c] == '\n') {
-                    break;
-                }
-                numOfChars++;
-            }
-            if (up->allInputs[c] == '\n') {
-                curLine++;
-            }
-        }
-        if (index > numOfChars + 1) {
-            printf(
-                "There aren't that many positions to insert! Try again. Number of positions you can insert to: %d\n",
-                numOfChars + 1);
-            return;
-        }
-        printf("Enter what do you want to insert: ");
-        up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
-        if (up->allInputs == nullptr) {
-            printf("There is no text to insert. Use Append Command!\n");
-            free(up->userInput);
-            up->userInput = nullptr;
-            return;
-        }
-        getchar();
-        getline(&up->userInput, &up->bufferInput, stdin);
-        up->userInput[strcspn(up->userInput, "\n")] = '\0';
-        char *newBuffer = (char *) malloc(strlen(up->allInputs) + strlen(up->userInput) + 1);
-        int j = copyUntilIndex(up->allInputs, newBuffer, line, index);
-        int m = 0;
-        while (up->userInput[m] != '\0') {
-            newBuffer[j++] = up->userInput[m++];
-        }
-        int i = 0;
-        while (up->allInputs[i] != '\0') {
-            newBuffer[j++] = up->allInputs[i++];
-        }
-        up->allInputs = (char *) realloc(up->allInputs, strlen(newBuffer) * sizeof(char));
-        strcpy(up->allInputs, newBuffer);
-        printf("Text was inserted.\n");
-        free(newBuffer);
-        newBuffer = nullptr;
-        free(up->userInput);
-        up->userInput = nullptr;
-        up->isSaved = false;
-    }
     int copyUntilIndex(char *source, char *destination, int line, int index) {
         int currentLine = 1;
         int currentIndex = 1;
@@ -398,10 +205,149 @@ public:
         return deletedText;
     }
 
-    void Delete(UserParams *up) {
-        int line, index, numSymbols;
-        printf("Choose line, index and number of symbols to delete: ");
-        scanf("%d %d %d", &line, &index, &numSymbols);
+public:
+    void AppendText(UserParams *up) {
+        SaveState(up);
+        if (up->allInputs == nullptr) {
+            up->allInputs = (char *) malloc((strlen(up->userInput) + 1) * sizeof(char));
+            strcpy(up->allInputs, up->userInput);
+        } else {
+            up->allInputs = (char *) realloc(up->allInputs,
+                                             (strlen(up->userInput) + strlen(up->allInputs) + 1) * sizeof(char));
+            strcat(up->allInputs, up->userInput);
+        }
+        printf("Text was appended.\n");
+        up->isSaved = false;
+    }
+
+    void NewLine(UserParams *up) {
+        SaveState(up);
+        if (up->allInputs == nullptr) {
+            up->allInputs = (char *) malloc(2 * sizeof(char));
+            strcpy(up->allInputs, "\n");
+        } else {
+            up->allInputs = (char *) realloc(up->allInputs, (strlen(up->allInputs) + 2) * sizeof(char));
+            strcat(up->allInputs, "\n");
+        }
+        printf("New line was started.\n");
+        up->isSaved = false;
+    }
+
+    void PrintText(UserParams *up) {
+        if (up->allInputs == nullptr) {
+            printf("There is no text to print!\n");
+        } else {
+            printf("%s", up->allInputs);
+            printf("\n");
+        }
+    }
+
+    void Clear(UserParams *up) {
+        SaveState(up);
+        if (up->allInputs == nullptr) {
+            printf("Console is empty.\n");
+            return;
+        } else {
+            free(up->allInputs);
+            up->allInputs = nullptr;
+            printf("Console was cleared.\n");
+            up->isSaved = false;
+        }
+    }
+
+    void SearchText(UserParams *up) {
+        int line = 1;
+        int charIndex = 1;
+        if (up->allInputs == nullptr) {
+            printf("There is no text to search!\n");
+            return;
+        }
+        char *search = strstr(up->allInputs, up->userInput);
+        if (search == nullptr) {
+            printf("Text was not found.\n");
+            return;
+        }
+
+        char *currentPosition = up->allInputs;
+        while (search != nullptr) {
+            while (currentPosition != search) {
+                if (*currentPosition == '\n') {
+                    line++;
+                    charIndex = 1;
+                } else {
+                    charIndex++;
+                }
+                currentPosition++;
+            }
+            printf("Text was found at: line %d, index %d\n", line, charIndex);
+            search = strstr(currentPosition + 1, up->userInput);
+        }
+    }
+
+    void InsertByIndex(UserParams *up, int line, int index) {
+        if (up->allInputs == nullptr) {
+            cout << "There is no text to insert. Use Append Command!" << endl;
+            return;
+        }
+        SaveState(up);
+        int numOfLines = 0;
+        if (up->allInputs[0] != '\0') {
+            numOfLines = 1;
+        }
+        for (int l = 0; up->allInputs[l] != '\0'; l++) {
+            if (up->allInputs[l] == '\n') {
+                numOfLines++;
+            }
+        }
+        if (line > numOfLines) {
+            printf("There aren't that many lines! Try again. Number of lines: %d\n", numOfLines);
+            free(up->userInput);
+            up->userInput = nullptr;
+            return;
+        }
+        int curLine = 1;
+        int numOfChars = 0;
+        for (int c = 0; up->allInputs[c] != '\0'; c++) {
+            if (curLine == line) {
+                if (up->allInputs[c] == '\n') {
+                    break;
+                }
+                numOfChars++;
+            }
+            if (up->allInputs[c] == '\n') {
+                curLine++;
+            }
+        }
+        if (index > numOfChars + 1) {
+            printf(
+                "There aren't that many positions to insert! Try again. Number of positions you can insert to: %d\n",
+                numOfChars + 1);
+            return;
+        }
+        char *newBuffer = (char *) malloc(strlen(up->allInputs) + strlen(up->userInput) + 1);
+        int j = copyUntilIndex(up->allInputs, newBuffer, line, index);
+        int m = 0;
+        while (up->userInput[m] != '\0') {
+            newBuffer[j++] = up->userInput[m++];
+        }
+        int i = 0;
+        while (up->allInputs[i] != '\0') {
+            newBuffer[j++] = up->allInputs[i++];
+        }
+        up->allInputs = (char *) realloc(up->allInputs, strlen(newBuffer) * sizeof(char));
+        strcpy(up->allInputs, newBuffer);
+        printf("Text was inserted.\n");
+        free(newBuffer);
+        newBuffer = nullptr;
+        up->isSaved = false;
+    }
+
+    void Delete(UserParams *up, int line, int index, int numSymbols) {
+        if (up->allInputs == nullptr) {
+            std::cout << "There is no text to delete." << std::endl;
+            return;
+        }
+        SaveState(up);
         char *deletedText = DeleteText(up, line, index, numSymbols);
         printf("Text was deleted.\n");
         free(deletedText);
@@ -463,26 +409,18 @@ public:
         }
     }
 
-    void Cut(UserParams *up) {
-        int line, index, numSymbols;
+    void Cut(UserParams *up, int line, int index, int numSymbols) {
         if (up->pasteBuffer != nullptr) {
             free(up->pasteBuffer);
         }
-        printf("Choose line and index and number of symbols: ");
-        scanf("%d %d %d", &line, &index, &numSymbols);
-        getchar();
         up->pasteBuffer = DeleteText(up, line, index, numSymbols);
         printf("Text was cut.\n");
     }
 
-    void Copy(UserParams *up) {
-        int line, index, numSymbols;
+    void Copy(UserParams *up, int line, int index, int numSymbols) {
         if (up->pasteBuffer != nullptr) {
             free(up->pasteBuffer);
         }
-        printf("Choose line, index and number of symbols: ");
-        scanf("%d %d %d", &line, &index, &numSymbols);
-        getchar();
         up->pasteBuffer = (char *) malloc((numSymbols + 1) * sizeof(char));
         int start = copyUntilIndex(up->allInputs, up->pasteBuffer, line, index);
         strncpy(up->pasteBuffer, up->allInputs + start, numSymbols);
@@ -491,12 +429,8 @@ public:
         printf("Text was copied\n");
     }
 
-    void Paste(UserParams *up) {
+    void Paste(UserParams *up, int line, int index) {
         SaveState(up);
-        int line, index;
-        printf("Choose line and index: ");
-        scanf("%d %d", &line, &index);
-        getchar();
         if (up->pasteBuffer == nullptr) {
             printf("There is nothing to paste!\n");
             return;
@@ -522,15 +456,7 @@ public:
         up->isSaved = false;
     }
 
-    void InsertWithReplacement(UserParams *up) {
-        int line, index;
-        printf("Choose line and index: ");
-        scanf("%d %d", &line, &index);
-        getchar();
-        printf("Write text: ");
-        up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
-        fgets(up->userInput, up->bufferInput, stdin);
-        up->userInput[strcspn(up->userInput, "\n")] = '\0';
+    void InsertWithReplacement(UserParams *up, int line, int index) {
         SaveState(up);
         int insertPos = copyUntilIndex(up->allInputs, NULL, line, index);
         int lengthDelete = 0;
@@ -550,29 +476,19 @@ public:
         strncpy(up->allInputs, Buffer, up->bufferInput);
         printf("Text was inserted with replacement.\n");
         free(Buffer);
-        free(up->userInput);
-        Buffer = NULL;
-        up->userInput = NULL;
+        Buffer = nullptr;
         up->isSaved = false;
     }
 
-    void EncryptText(UserParams *up) {
+    void EncryptText(UserParams *up, int key) {
         SaveState(up);
-        int key;
-        cout << "Enter the key for encryption: ";
-        cin >> key;
-        cin.ignore();
         cipher.Encrypt(up->allInputs, key);
         cout << "Text was encrypted." << endl;
         up->isSaved = false;
     }
 
-    void DecryptText(UserParams *up) {
+    void DecryptText(UserParams *up, int key) {
         SaveState(up);
-        int key;
-        cout << "Enter the key for decryption: ";
-        cin >> key;
-        cin.ignore();
         cipher.Decrypt(up->allInputs, key);
         cout << "Text was decrypted." << endl;
         up->isSaved = false;
@@ -610,10 +526,6 @@ public:
             printf("There is no text to save!\n");
             return;
         }
-        printf("Enter a title for file: ");
-        up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
-        scanf("%s", up->userInput);
-
         FILE *file = fopen(up->userInput, "w");
         if (file == nullptr) {
             printf("Error opening file %s for writing.\n", up->userInput);
@@ -627,19 +539,12 @@ public:
         fclose(file);
         printf("File created and text saved!\n");
         up->isSaved = true;
-
-        free(up->userInput);
-        up->userInput = nullptr;
     }
 
-    void LoadFromFile(UserParams *up) {
+    void LoadFromFile(UserParams *up, char *fileInput) {
         if (!CheckUnsavedChanges(up)) {
             return;
         }
-        printf("Enter a file that you want to load info from: ");
-        char fileInput[256];
-        scanf("%s", fileInput);
-
         FILE *file = fopen(fileInput, "r");
         if (file == nullptr) {
             printf("Error opening file %s for reading.\n", fileInput);
@@ -779,6 +684,181 @@ private:
     }
 
 public:
+    void EncryptFile(UserParams *up, char *inputFile, char *outputFile, int key) {
+        ProcessFile(up, inputFile, outputFile, key, true);
+    }
+
+    void DecryptFile(UserParams *up, char *inputFile, char *outputFile, int key) {
+        ProcessFile(up, inputFile, outputFile, key, false);
+    }
+};
+
+class Text {
+    UserParams up;
+    TextEditor editor;
+    CaesarCipher cipher;
+    FileHandler file;
+    CaesarFiles cfiles;
+
+public:
+    void ProgramHelper() {
+        printf("Hello! This is a Simple Text Editor. You can use these commands: \n"
+            "0 - Help \n"
+            "1 - Append text \n"
+            "2 - Start the new line \n"
+            "3 - Load the information from the file \n"
+            "4 - Save the information to the file \n"
+            "5 - Print the text \n"
+            "6 - Insert the text by line and symbol \n"
+            "7 - Search the text \n"
+            "8 - Clear the console \n"
+            "9 - Delete number of symbols by line and index \n"
+            "10 - Undo \n"
+            "11 - Redo \n"
+            "12 - Cut \n"
+            "13 - Copy \n"
+            "14 - Paste \n"
+            "15 - Insert with replacement \n"
+            "16 - Encrypt \n"
+            "17 - Decrypt \n"
+            "18 - Encrypt file \n"
+            "19 - Decrypt file \n"
+            "20 - Exit \n");
+    }
+
+    void AppendText(UserParams *up) {
+        up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
+        size_t len = 0;
+        int i;
+
+        cout << "Enter a string that you want to append: ";
+        while ((i = getchar()) != '\n') {
+            if (len + 1 >= up->bufferInput) {
+                up->bufferInput += 256;
+                up->userInput = (char *) realloc(up->userInput, up->bufferInput * sizeof(char));
+            }
+            up->userInput[len++] = i;
+        }
+
+        up->userInput[len] = '\0';
+        editor.AppendText(up);
+        free(up->userInput);
+        up->userInput = nullptr;
+    }
+
+    void NewLine(UserParams *up) {
+        editor.NewLine(up);
+    }
+
+    void PrintText(UserParams *up) {
+        editor.PrintText(up);
+    }
+
+    void Clear(UserParams *up) {
+        editor.Clear(up);
+    }
+
+    void SearchText(UserParams *up) {
+        cout << "Enter text to search: " << endl;
+        up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
+        scanf("%s", up->userInput);
+        editor.SearchText(up);
+        free(up->userInput);
+        up->userInput = nullptr;
+    }
+
+    void InsertByIndex(UserParams *up) {
+        int line, index;
+        cout << "Choose line and index: ";
+        cin >> line >> index;
+        up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
+        cout << "Enter what do you want to insert: ";
+        cin.ignore();
+        cin.getline(up->userInput, up->bufferInput);
+        up->userInput[strcspn(up->userInput, "\n")] = '\0';
+        editor.InsertByIndex(up, line, index);
+        free(up->userInput);
+        up->userInput = nullptr;
+    }
+
+    void Delete(UserParams *up) {
+        int line, index, numSymbols;
+        cout << "Choose line, index and number of symbols to delete: ";
+        cin >> line >> index >> numSymbols;
+        cin.ignore();
+        editor.Delete(up, line, index, numSymbols);
+    }
+
+    void Undo(UserParams *up) {
+        editor.Undo(up);
+    }
+
+    void Redo(UserParams *up) {
+        editor.Redo(up);
+    }
+
+    void Cut(UserParams *up) {
+        int line, index, numSymbols;
+        cout << "Choose line, index and number of symbols: ";
+        cin >> line >> index >> numSymbols;
+        cin.ignore();
+        editor.Cut(up, line, index, numSymbols);
+    }
+    void Copy(UserParams *up) {
+        int line, index, numSymbols;
+        cout << "Choose line, index and number of symbols: ";
+        cin >> line >> index >> numSymbols;
+        cin.ignore();
+        editor.Copy(up, line, index, numSymbols);
+    }
+    void Paste(UserParams *up) {
+        int line, index;
+        cout << "Choose line and index: ";
+        cin >> line >> index;
+        cin.ignore();
+        editor.Paste(up, line, index);
+    }
+    void InsertWithReplacement(UserParams *up) {
+        int line, index;
+        cout << "Choose line and index: ";
+        cin >> line >> index;
+        cin.ignore();
+        cout << "Write text: ";
+        up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
+        fgets(up->userInput, up->bufferInput, stdin);
+        up->userInput[strcspn(up->userInput, "\n")] = '\0';
+        editor.InsertWithReplacement(up, line, index);
+        free(up->userInput);
+        up->userInput = nullptr;
+    }
+    void Encrypt(UserParams *up) {
+        int key;
+        cout << "Enter the key for encryption: ";
+        cin >> key;
+        cin.ignore();
+        editor.EncryptText(up, key);
+    }
+    void Decrypt(UserParams *up) {
+        int key;
+        cout << "Enter the key for decryption: ";
+        cin >> key;
+        cin.ignore();
+        editor.DecryptText(up, key);
+    }
+    void SaveFile(UserParams *up) {
+        cout << "Enter a title for file: ";
+        up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
+        scanf("%s", up->userInput);
+        file.SaveFile(up);
+        free(up->userInput);
+        up->userInput = nullptr;
+    }
+    void LoadFromFile(UserParams *up) {
+        cout << "Enter a file that you want to load info from: ";
+        char fileInput[256];
+        scanf("%s", fileInput);
+        file.LoadFromFile(up, fileInput);
+    }
     void EncryptFile(UserParams *up) {
         char inputFile[256];
         char outputFile[256];
@@ -792,10 +872,8 @@ public:
         cout << "Enter the key for encryption: ";
         cin >> key;
         cin.ignore();
-
-        ProcessFile(up, inputFile, outputFile, key, true);
+        cfiles.EncryptFile(up, inputFile, outputFile, key);
     }
-
     void DecryptFile(UserParams *up) {
         char inputFile[256];
         char outputFile[256];
@@ -809,8 +887,7 @@ public:
         cout << "Enter the key for decryption: ";
         cin >> key;
         cin.ignore();
-
-        ProcessFile(up, inputFile, outputFile, key, false);
+        cfiles.DecryptFile(up, inputFile, outputFile, key);
     }
 };
 
@@ -820,6 +897,7 @@ class CommandsRunner {
     FileHandler files;
     TextEditor editor;
     CaesarFiles cipherFile;
+    Text text;
 
 public:
     enum Commands {
@@ -858,67 +936,67 @@ public:
     void CommandRunner(int command, UserParams *up) {
         switch (command) {
             case COMMAND_HELP:
-                editor.ProgramHelper();
+                text.ProgramHelper();
                 return;
             case COMMAND_APPEND:
-                editor.AppendText(up);
+                text.AppendText(up);
                 break;
             case START_NEW_LINE:
-                editor.NewLine(up);
+                text.NewLine(up);
                 break;
             case LOAD_FROM_FILE:
-                files.LoadFromFile(up);
+                text.LoadFromFile(up);
                 break;
             case SAVE_TO_FILE:
-                files.SaveFile(up);
+                text.SaveFile(up);
                 break;
             case PRINT_TEXT:
-                editor.PrintText(up);
+                text.PrintText(up);
                 break;
             case INSERT_BY_INDEX:
-                editor.InsertByIndex(up);
+                text.InsertByIndex(up);
                 break;
             case SEARCH_TEXT:
-                editor.SearchText(up);
+                text.SearchText(up);
                 break;
             case CLEAR_CONSOLE:
-                editor.Clear(up);
+                text.Clear(up);
                 break;
             case DELETE:
-                editor.Delete(up);
+                text.Delete(up);
                 break;
             case UNDO:
-                editor.Undo(up);
+                text.Undo(up);
                 break;
             case REDO:
-                editor.Redo(up);
+                text.Redo(up);
                 break;
             case CUT:
-                editor.Cut(up);
+                text.Cut(up);
                 break;
             case COPY:
-                editor.Copy(up);
+                text.Copy(up);
                 break;
             case PASTE:
-                editor.Paste(up);
+                text.Paste(up);
                 break;
             case INSERT_WITH_REPLACEMENT:
-                editor.InsertWithReplacement(up);
+                text.InsertWithReplacement(up);
                 break;
             case ENCRYPT:
-                editor.EncryptText(up);
+                text.Encrypt(up);
                 break;
             case DECRYPT:
-                editor.DecryptText(up);
+                text.Decrypt(up);
                 break;
             case ENCRYPT_FILE:
-                cipherFile.EncryptFile(up);
+                text.EncryptFile(up);
                 break;
             case DECRYPT_FILE:
-                cipherFile.DecryptFile(up);
+                text.DecryptFile(up);
                 break;
             case EXIT:
-                editor.Clear(up);
+                text.Clear(up);
                 printf("Thanks for using this program. Bye!\n");
                 break;
             default:
