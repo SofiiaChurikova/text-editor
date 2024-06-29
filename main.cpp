@@ -74,27 +74,32 @@ private:
     bool loadLibrary() {
         handle = dlopen("./libcaesar.dylib", RTLD_LAZY);
         if (handle == nullptr) {
-            return false;
+            throw runtime_error("Failed to load library");
         }
         encrypt = (encrypt_ptr) dlsym(handle, "Encrypt");
         decrypt = (decrypt_ptr) dlsym(handle, "Decrypt");
         if (!encrypt || !decrypt) {
-            cout << "Proc failed or not found" << endl;
             closeLibrary();
-            return false;
+            throw runtime_error("Failed to load functions");
         }
         return true;
     }
 
 public:
-    CaesarCipher() {
-        if (!loadLibrary()) {
-            closeLibrary();
-            cout << "Problems with your library!" << endl;
-        }
+    CaesarCipher() : handle(nullptr), encrypt(nullptr), decrypt(nullptr) {
     }
 
     ~CaesarCipher() {
+        closeLibrary();
+    }
+
+    void LoadLibrary() {
+        if (!handle) {
+            loadLibrary();
+        }
+    }
+
+    void CloseLibrary() {
         closeLibrary();
     }
 
@@ -130,7 +135,6 @@ public:
 
 class TextEditor {
     UserParams up;
-    CaesarCipher cipher;
 
 private:
     void SaveState(UserParams *up) {
@@ -481,16 +485,31 @@ public:
     }
 
     void EncryptText(UserParams *up, int key) {
-        SaveState(up);
-        cipher.Encrypt(up->allInputs, key);
-        cout << "Text was encrypted." << endl;
+        try {
+            CaesarCipher cipher;
+            cipher.LoadLibrary();
+            SaveState(up);
+            cipher.Encrypt(up->allInputs, key);
+            cout << "Text was encrypted." << endl;
+            cipher.CloseLibrary();
+        } catch (const runtime_error &e) {
+            cerr << "Encryption error: " << e.what() << endl;
+        }
         up->isSaved = false;
     }
 
     void DecryptText(UserParams *up, int key) {
-        SaveState(up);
-        cipher.Decrypt(up->allInputs, key);
-        cout << "Text was decrypted." << endl;
+        try {
+            CaesarCipher cipher;
+            cipher.LoadLibrary();
+            SaveState(up);
+            cipher.Decrypt(up->allInputs, key);
+            cout << "Text was decrypted." << endl;
+            up->isSaved = false;
+            cipher.CloseLibrary();
+        } catch (const runtime_error &e) {
+            cerr << "Decryption error: " << e.what() << endl;
+        }
         up->isSaved = false;
     }
 };
@@ -575,7 +594,6 @@ public:
 };
 
 class CaesarFiles {
-    CaesarCipher cipher;
     UserParams up;
 
     class FileData {
@@ -642,44 +660,54 @@ private:
     }
 
     void ProcessFile(UserParams *up, char *inputFilePath, char *outputFilePath, int key, bool encrypt) {
-        FileData fileText = LoadFileInfo(inputFilePath);
-        if (fileText.getContent() != nullptr) {
-            int fileSize = fileText.getSize();
-            int textSize = 0;
-            up->processed = (char *) malloc((fileSize + 1) * sizeof(char));
+        CaesarCipher cipher;
+        cipher.LoadLibrary();
 
-            while (textSize < fileSize) {
-                int remainingSize = fileSize - textSize;
-                int chunkSize;
-                if (remainingSize > 128) {
-                    chunkSize = 128;
-                } else {
-                    chunkSize = remainingSize;
+        try {
+            FileData fileText = LoadFileInfo(inputFilePath);
+            if (fileText.getContent() != nullptr) {
+                int fileSize = fileText.getSize();
+                int textSize = 0;
+                up->processed = (char *) malloc((fileSize + 1) * sizeof(char));
+
+                while (textSize < fileSize) {
+                    int remainingSize = fileSize - textSize;
+                    int chunkSize;
+                    if (remainingSize > 128) {
+                        chunkSize = 128;
+                    } else {
+                        chunkSize = remainingSize;
+                    }
+                    char buffer[128];
+                    memcpy(buffer, fileText.getContent() + textSize, chunkSize);
+                    cout << "Size of chunk: " << chunkSize << " at: " << textSize << endl;
+
+                    if (encrypt) {
+                        cipher.EncryptChunk(buffer, key);
+                    } else {
+                        cipher.DecryptChunk(buffer, key);
+                    }
+
+                    memcpy(up->processed + textSize, buffer, chunkSize);
+                    textSize += chunkSize;
                 }
-                char buffer[128];
-                memcpy(buffer, fileText.getContent() + textSize, chunkSize);
-                cout << "Processing chunk of size: " << chunkSize << " at: " << textSize << endl;
 
-                if (encrypt) {
-                    cipher.EncryptChunk(buffer, key);
-                } else {
-                    cipher.DecryptChunk(buffer, key);
+                if (SaveFileInfo(outputFilePath, up->processed, fileSize)) {
+                    if (encrypt) {
+                        cout << "File encrypted and saved as " << outputFilePath << endl;
+                    } else {
+                        cout << "File decrypted and saved as " << outputFilePath << endl;
+                    }
                 }
 
-                memcpy(up->processed + textSize, buffer, chunkSize);
-                textSize += chunkSize;
+                free(up->processed);
+                up->processed = nullptr;
             }
 
-            if (SaveFileInfo(outputFilePath, up->processed, fileSize)) {
-                if (encrypt) {
-                    cout << "File encrypted and saved as " << outputFilePath << endl;
-                } else {
-                    cout << "File decrypted and saved as " << outputFilePath << endl;
-                }
-            }
-
-            free(up->processed);
-            up->processed = nullptr;
+            cipher.CloseLibrary();
+        } catch (const runtime_error &e) {
+            cerr << "File processing error: " << e.what() << endl;
+            cipher.CloseLibrary();
         }
     }
 
@@ -693,10 +721,10 @@ public:
     }
 };
 
+
 class Text {
     UserParams up;
     TextEditor editor;
-    CaesarCipher cipher;
     FileHandler file;
     CaesarFiles cfiles;
 
@@ -804,6 +832,7 @@ public:
         cin.ignore();
         editor.Cut(up, line, index, numSymbols);
     }
+
     void Copy(UserParams *up) {
         int line, index, numSymbols;
         cout << "Choose line, index and number of symbols: ";
@@ -811,6 +840,7 @@ public:
         cin.ignore();
         editor.Copy(up, line, index, numSymbols);
     }
+
     void Paste(UserParams *up) {
         int line, index;
         cout << "Choose line and index: ";
@@ -818,6 +848,7 @@ public:
         cin.ignore();
         editor.Paste(up, line, index);
     }
+
     void InsertWithReplacement(UserParams *up) {
         int line, index;
         cout << "Choose line and index: ";
@@ -831,6 +862,7 @@ public:
         free(up->userInput);
         up->userInput = nullptr;
     }
+
     void Encrypt(UserParams *up) {
         int key;
         cout << "Enter the key for encryption: ";
@@ -838,6 +870,7 @@ public:
         cin.ignore();
         editor.EncryptText(up, key);
     }
+
     void Decrypt(UserParams *up) {
         int key;
         cout << "Enter the key for decryption: ";
@@ -845,6 +878,7 @@ public:
         cin.ignore();
         editor.DecryptText(up, key);
     }
+
     void SaveFile(UserParams *up) {
         cout << "Enter a title for file: ";
         up->userInput = (char *) malloc(up->bufferInput * sizeof(char));
@@ -853,12 +887,14 @@ public:
         free(up->userInput);
         up->userInput = nullptr;
     }
+
     void LoadFromFile(UserParams *up) {
         cout << "Enter a file that you want to load info from: ";
         char fileInput[256];
         scanf("%s", fileInput);
         file.LoadFromFile(up, fileInput);
     }
+
     void EncryptFile(UserParams *up) {
         char inputFile[256];
         char outputFile[256];
@@ -874,6 +910,7 @@ public:
         cin.ignore();
         cfiles.EncryptFile(up, inputFile, outputFile, key);
     }
+
     void DecryptFile(UserParams *up) {
         char inputFile[256];
         char outputFile[256];
