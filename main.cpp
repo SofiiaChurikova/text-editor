@@ -617,7 +617,7 @@ class CaesarFiles {
     UserParams up;
 
 private:
-    bool SaveToFile(const char *filePath, const char *content, long size) {
+    bool SaveToFile(char *filePath, char *content, long size) {
         FILE *file = fopen(filePath, "ab");
         if (!file) {
             cout << "Error opening file " << filePath << endl;
@@ -634,46 +634,58 @@ private:
         return true;
     }
 
-    void ProcessFile(UserParams *up, const char *inputFilePath, const char *outputFilePath, int key, bool encrypt) {
+    void ProcessFile(char *inputFilePath, char *outputFilePath, int key, bool encrypt) {
         try {
             CaesarCipher cipher;
             cipher.LoadLibrary();
 
             const int CHUNK_SIZE = 128;
-            char buffer[CHUNK_SIZE + 1];
+            char buffer[CHUNK_SIZE];
 
+            bool useTemp = strcmp(inputFilePath, outputFilePath) == 0;
             FILE *inputFile = fopen(inputFilePath, "rb");
             if (!inputFile) {
                 throw runtime_error("Error opening input file");
             }
 
-            FILE *outputFile = fopen(outputFilePath, "wb");
-            if (!outputFile) {
-                fclose(inputFile);
-                throw runtime_error("Error opening output file");
+            char tempPath[128];
+            if (useTemp) {
+                snprintf(tempPath, sizeof(tempPath), "%s.tmp", outputFilePath);
             }
-            fclose(outputFile);
-
             size_t bytesRead;
             int chunkIndex = 0;
             while ((bytesRead = fread(buffer, 1, CHUNK_SIZE, inputFile)) > 0) {
-                buffer[bytesRead] = '\0';
-
                 if (encrypt) {
                     cipher.EncryptChunk(buffer, key);
                 } else {
                     cipher.DecryptChunk(buffer, key);
                 }
 
-                if (!SaveToFile(outputFilePath, buffer, bytesRead)) {
-                    fclose(inputFile);
-                    throw runtime_error("Error writing to output file");
+                if (useTemp) {
+                    if (!SaveToFile(tempPath, buffer, bytesRead)) {
+                        fclose(inputFile);
+                        throw runtime_error("Error writing to output file");
+                    }
+                } else {
+                    if (!SaveToFile(outputFilePath, buffer, bytesRead)) {
+                        fclose(inputFile);
+                        throw runtime_error("Error writing to output file");
+                    }
                 }
 
                 cout << "Processed chunk " << ++chunkIndex << ", size: " << bytesRead << " bytes." << endl;
             }
 
             fclose(inputFile);
+
+            if (useTemp) {
+                if (remove(outputFilePath) != 0) {
+                    throw runtime_error("Error removing original file");
+                }
+                if (rename(tempPath, outputFilePath) != 0) {
+                    throw runtime_error("Error renaming temporary file");
+                }
+            }
 
             if (encrypt) {
                 cout << "File encrypted and saved as " << outputFilePath << endl;
@@ -688,12 +700,12 @@ private:
     }
 
 public:
-    void EncryptFile(UserParams *up, const char *inputFile, const char *outputFile, int key) {
-        ProcessFile(up, inputFile, outputFile, key, true);
+    void EncryptFile(char *inputFile, char *outputFile, int key) {
+        ProcessFile(inputFile, outputFile, key, true);
     }
 
-    void DecryptFile(UserParams *up, const char *inputFile, const char *outputFile, int key) {
-        ProcessFile(up, inputFile, outputFile, key, false);
+    void DecryptFile(char *inputFile, char *outputFile, int key) {
+        ProcessFile(inputFile, outputFile, key, false);
     }
 };
 
@@ -870,7 +882,7 @@ public:
         file.LoadFromFile(up, fileInput);
     }
 
-    void EncryptFile(UserParams *up) {
+    void EncryptFile() {
         char inputFile[256];
         char outputFile[256];
         cout << "Enter input file path: ";
@@ -883,10 +895,10 @@ public:
         cout << "Enter the key for encryption: ";
         cin >> key;
         cin.ignore();
-        cfiles.EncryptFile(up, inputFile, outputFile, key);
+        cfiles.EncryptFile(inputFile, outputFile, key);
     }
 
-    void DecryptFile(UserParams *up) {
+    void DecryptFile() {
         char inputFile[256];
         char outputFile[256];
         cout << "Enter input file path: ";
@@ -899,7 +911,7 @@ public:
         cout << "Enter the key for decryption: ";
         cin >> key;
         cin.ignore();
-        cfiles.DecryptFile(up, inputFile, outputFile, key);
+        cfiles.DecryptFile(inputFile, outputFile, key);
     }
 };
 
@@ -1002,10 +1014,10 @@ public:
                 text.Decrypt(up);
                 break;
             case ENCRYPT_FILE:
-                text.EncryptFile(up);
+                text.EncryptFile();
                 break;
             case DECRYPT_FILE:
-                text.DecryptFile(up);
+                text.DecryptFile();
                 break;
             case EXIT:
                 text.Clear(up);
