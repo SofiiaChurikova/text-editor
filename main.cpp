@@ -593,26 +593,6 @@ public:
     }
 };
 
-class FileData {
-private:
-    char *content;
-    int size;
-
-public:
-    FileData(char *content = nullptr, int size = 0) : content(content), size(size) {
-    }
-
-    ~FileData() {
-        if (content) {
-            free(content);
-            content = nullptr;
-        }
-    }
-
-    char *getContent() { return content; }
-    int getSize() { return size; }
-};
-
 class CaesarFiles {
     UserParams up;
 
